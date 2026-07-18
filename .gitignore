@@ -1,0 +1,31 @@
+# ─── Dependencies ───
+**/node_modules/
+**/.venv/
+venv/
+
+# ─── Build output ───
+**/dist/
+**/dist-ssr/
+**/build/
+
+# ─── Python ───
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ─── Secrets / local env — NEVER COMMIT ───
+**/.env
+**/.env.*
+!**/.env.example
+
+# ─── Logs ───
+*.log
+**/logs/
+
+# ─── OS / editor ───
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

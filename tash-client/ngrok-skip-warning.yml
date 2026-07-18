@@ -1,0 +1,9 @@
+# ngrok traffic policy — "Visit Site" ogohlantirish sahifasini o'tkazib yuboradi.
+# Ishlatish:
+#   ngrok http 5173 --traffic-policy-file ngrok-skip-warning.yml
+on_http_request:
+  - actions:
+      - type: add-headers
+        config:
+          headers:
+            ngrok-skip-browser-warning: "true"

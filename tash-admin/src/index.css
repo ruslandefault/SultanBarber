@@ -1,0 +1,184 @@
+@import 'tailwindcss';
+
+/* ============ Self-hosted fonts ============ */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/clash-display-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/space-mono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/space-mono-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============ Design tokens (LOCKED) ============ */
+@theme {
+  --color-graphite: #1c1f22;
+  --color-slate: #26292e;
+  --color-bone: #f4f3ef;
+  --color-stone: #9a948a;
+  --color-brass: #c9a24b;
+  --color-sage: #5b8a6a;
+  --color-clay: #c25436;
+  --color-clay-muted: #a8674f;
+
+  --color-hairline-dark: rgba(244, 243, 239, 0.08);
+  --color-hairline-light: rgba(28, 31, 34, 0.08);
+
+  --font-display: 'Clash Display', 'Satoshi', system-ui, sans-serif;
+  --font-sans: 'Satoshi', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --text-2xs: 0.75rem; /* 12 */
+  --text-xs: 0.875rem; /* 14 */
+  --text-base: 1rem; /* 16 */
+  --text-lg: 1.25rem; /* 20 */
+  --text-xl: 1.75rem; /* 28 */
+  --text-2xl: 2.5rem; /* 40 */
+
+  --radius-card: 14px;
+  --radius-control: 10px;
+}
+
+/* ============ Base ============ */
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bone);
+  color: var(--color-graphite);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Numeric fields use tabular figures */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Visible brass focus ring */
+*:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(28, 31, 34, 0.05) 25%,
+    rgba(28, 31, 34, 0.1) 37%,
+    rgba(28, 31, 34, 0.05) 63%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Sheet slide-in */
+@keyframes sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-sheet-in {
+  animation: sheet-in 0.18s ease-out;
+}
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+/* Thin scrollbars in the journal grid */
+.scroll-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-stone);
+  border-radius: 8px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}

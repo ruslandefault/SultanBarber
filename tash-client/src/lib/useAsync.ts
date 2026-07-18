@@ -1,0 +1,28 @@
+import { useEffect, useState } from 'react'
+
+export interface AsyncState<T> {
+  data?: T
+  error?: string
+  loading: boolean
+}
+
+/** Run an async loader on mount / when deps change, tracking loading + error. */
+export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T> {
+  const [state, setState] = useState<AsyncState<T>>({ loading: true })
+
+  useEffect(() => {
+    let alive = true
+    setState({ loading: true })
+    fn()
+      .then((data) => alive && setState({ data, loading: false }))
+      .catch((err: unknown) =>
+        alive && setState({ error: err instanceof Error ? err.message : 'Xatolik yuz berdi', loading: false }),
+      )
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+
+  return state
+}

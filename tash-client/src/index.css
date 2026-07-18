@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────
+   TASH — self-hosted fonts (font-display: swap)
+   Clash Display · Satoshi · Space Mono
+   ───────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-Semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/SpaceMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/SpaceMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Design tokens (dark-forward, accent = Brass)
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-graphite: #1c1f22;
+  --color-slate: #26292e;
+  --color-bone: #f4f3ef;
+  --color-stone: #9a948a;
+  --color-brass: #c9a24b;
+  --color-sage: #5b8a6a;
+  --color-clay: #c25436;
+
+  /* Hairline border on dark surfaces */
+  --color-hairline: rgba(244, 243, 239, 0.08);
+
+  /* Fonts */
+  --font-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Satoshi', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Type scale: 12 / 14 / 16 / 20 / 28 / 40 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.5rem;
+  --text-3xl--line-height: 1.05;
+
+  /* Radii */
+  --radius-input: 10px;
+  --radius-card: 14px;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Safe-area: prefer Telegram-provided vars, fall back to env() */
+    --safe-top: var(--tg-content-safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --safe-bottom: var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    /* App viewport height: Telegram stable height, else dynamic vh */
+    --app-height: var(--tg-viewport-stable-height, 100dvh);
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-graphite);
+    color: var(--color-bone);
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: var(--text-base);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Visible keyboard focus — brass ring */
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  /* Tabular figures for the mono font (times & prices) */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Utilities
+   ───────────────────────────────────────────────────────────── */
+@utility pt-safe {
+  padding-top: var(--safe-top);
+}
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+@utility min-h-app {
+  min-height: var(--app-height);
+}
+
+/* Hide scrollbars on horizontal strips while keeping scroll */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
