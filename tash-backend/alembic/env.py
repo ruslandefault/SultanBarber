@@ -43,7 +43,9 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    connectable = create_async_engine(DB_URL, pool_pre_ping=True)
+    # Remote managed DBs (Neon/Render) require TLS; local doesn't.
+    connect_args = {} if ("localhost" in DB_URL or "127.0.0.1" in DB_URL) else {"ssl": True}
+    connectable = create_async_engine(DB_URL, connect_args=connect_args)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()

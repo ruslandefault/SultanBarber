@@ -12,7 +12,12 @@ from app.core.config import settings
 
 # Managed Postgres (Render/Neon) requires TLS; asyncpg takes it via connect_args
 # (not the ?sslmode= URL param, which we strip in config).
-_connect_args = {"ssl": True} if settings.db_is_remote else {}
+# statement_cache_size=0 keeps asyncpg compatible with connection poolers
+# (e.g. Neon's pgbouncer in transaction mode) — avoids "prepared statement
+# already exists" errors.
+_connect_args = (
+    {"ssl": True, "statement_cache_size": 0} if settings.db_is_remote else {}
+)
 
 engine = create_async_engine(
     settings.DATABASE_URL,
