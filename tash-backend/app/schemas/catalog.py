@@ -79,6 +79,7 @@ class MasterOut(ORMModel):
     bio: str | None
     sort_order: int
     is_active: bool
+    service_ids: list[int] = []
 
 
 class MasterDetailOut(MasterOut):

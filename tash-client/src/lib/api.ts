@@ -113,6 +113,7 @@ interface BeMaster {
   bio: string | null
   sort_order: number
   is_active: boolean
+  service_ids?: number[]
 }
 interface BeSalonProfile {
   salon: BeSalon
@@ -228,6 +229,7 @@ function toMaster(m: BeMaster): Master {
     avatar: m.photo_url, // backend `photo_url` → client `avatar`
     specialty: m.specialty ?? '', // client `specialty` required
     isActive: m.is_active,
+    serviceIds: (m.service_ids ?? []).map(String),
     // backend has no rating / nextAvailable → omitted (optional on client type)
   }
 }

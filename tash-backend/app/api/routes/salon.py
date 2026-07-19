@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import DbDep, _default_salon_id
 from app.core.errors import NotFoundError
-from app.models.master import Master
+from app.models.master import Master, MasterService
 from app.models.product import Product
 from app.models.salon import Salon
 from app.models.service import Service, ServiceCategory
@@ -65,10 +65,29 @@ async def get_salon(db: DbDep) -> SalonProfileOut:
         )
     ).scalars().all()
 
+    # Which services each master performs — so the client only offers a master
+    # for services they actually do (matches the availability rules).
+    ms_rows = (
+        await db.execute(
+            select(MasterService.master_id, MasterService.service_id).where(
+                MasterService.master_id.in_([m.id for m in masters]) if masters else False
+            )
+        )
+    ).all()
+    svc_by_master: dict[int, list[int]] = {}
+    for mid, sid in ms_rows:
+        svc_by_master.setdefault(mid, []).append(sid)
+
+    master_out: list[MasterOut] = []
+    for m in masters:
+        mo = MasterOut.model_validate(m)
+        mo.service_ids = svc_by_master.get(m.id, [])
+        master_out.append(mo)
+
     return SalonProfileOut(
         salon=SalonOut.model_validate(salon),
         categories=cat_out,
-        masters=[MasterOut.model_validate(m) for m in masters],
+        masters=master_out,
     )
 
 

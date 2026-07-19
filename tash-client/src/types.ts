@@ -32,6 +32,7 @@ export interface Master {
   rating?: number
   isActive: boolean
   nextAvailable?: string
+  serviceIds?: string[] // which services this master performs
 }
 
 export interface ServiceCategory {

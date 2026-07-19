@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { Appointment, AvailabilitySlot, Master, Service } from '@/types'
 import { api } from '@/lib/api'
@@ -39,6 +39,21 @@ export default function Booking() {
   const totalDuration = selectedServices.reduce((n, s) => n + s.durationMin, 0)
   const totalPrice = selectedServices.reduce((n, s) => n + s.priceSoum, 0)
   const deposit = data?.settings.depositRequired ? data.settings.depositAmount : 0
+
+  // Only masters who perform ALL selected services can take this booking.
+  const eligibleMasters = useMemo<Master[]>(() => {
+    if (!data) return []
+    return data.masters.filter(
+      (m) => m.isActive && serviceIds.every((sid) => (m.serviceIds ?? []).includes(sid)),
+    )
+  }, [data, serviceIds])
+
+  // If the chosen master no longer performs the selected services, clear it.
+  useEffect(() => {
+    if (masterId && masterId !== ANY && !eligibleMasters.some((m) => m.id === masterId)) {
+      setMasterId('')
+    }
+  }, [eligibleMasters, masterId])
 
   const selectedMaster: Master | null = useMemo(() => {
     if (!data) return null
@@ -108,7 +123,7 @@ export default function Booking() {
         />
       ) : step === 2 ? (
         <Step2
-          masters={data.masters.filter((m) => m.isActive)}
+          masters={eligibleMasters}
           selected={masterId}
           onSelect={(id) => {
             haptics.selection()
