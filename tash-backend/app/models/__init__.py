@@ -6,6 +6,7 @@ from app.models.client import Client, ClientTag, ClientTagLink
 from app.models.master import Master, MasterService
 from app.models.notification import SentReminder
 from app.models.payment import Payment
+from app.models.product import Product
 from app.models.salon import Salon, SalonSettings, WorkingHours
 from app.models.service import Service, ServiceCategory
 from app.models.user import User
@@ -26,5 +27,6 @@ __all__ = [
     "Appointment",
     "AppointmentService",
     "Payment",
+    "Product",
     "SentReminder",
 ]

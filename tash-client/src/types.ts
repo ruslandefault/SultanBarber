@@ -49,6 +49,14 @@ export interface Service {
   isActive: boolean
 }
 
+export interface Product {
+  id: string
+  title: string
+  description?: string
+  priceSoum: number
+  imageUrl?: string | null
+}
+
 export interface SalonSettings {
   depositRequired: boolean
   depositAmount: number // integer so'm (already resolved from fixed/percent)

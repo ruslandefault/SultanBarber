@@ -5,6 +5,7 @@ import { Shell } from '@/components/Shell'
 import { Journal } from '@/screens/Journal'
 import { Clients } from '@/screens/Clients'
 import { Catalog } from '@/screens/Catalog'
+import { Products } from '@/screens/Products'
 import { Settings } from '@/screens/Settings'
 import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/Field'
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: 'mijozlar', element: <Clients /> },
       { path: 'xizmatlar', element: <Catalog tab="services" /> },
       { path: 'ustalar', element: <Catalog tab="masters" /> },
+      { path: 'mahsulotlar', element: <Products /> },
       { path: 'sozlamalar', element: <Settings /> },
       { path: '*', element: <Journal /> },
     ],

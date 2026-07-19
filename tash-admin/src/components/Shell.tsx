@@ -5,6 +5,7 @@ import {
   IconUsers,
   IconScissors,
   IconMaster,
+  IconBag,
   IconSettings,
 } from '@/components/icons'
 import { cn } from '@/lib/cn'
@@ -20,6 +21,7 @@ const NAV: NavItem[] = [
   { to: '/mijozlar', label: 'Mijozlar', icon: IconUsers },
   { to: '/xizmatlar', label: 'Xizmatlar', icon: IconScissors },
   { to: '/ustalar', label: 'Ustalar', icon: IconMaster },
+  { to: '/mahsulotlar', label: 'Mahsulotlar', icon: IconBag },
   { to: '/sozlamalar', label: 'Sozlamalar', icon: IconSettings },
 ]
 

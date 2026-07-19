@@ -3,14 +3,17 @@ from __future__ import annotations
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import (
     admin_appointments,
     admin_catalog,
     admin_clients,
+    admin_products,
     admin_settings,
     auth,
     booking,
@@ -77,6 +80,13 @@ app.include_router(admin_catalog.router)
 app.include_router(admin_clients.router)
 app.include_router(admin_appointments.router)
 app.include_router(admin_settings.router)
+app.include_router(admin_products.router)
+
+# Uploaded media (product images, etc.) — served at /uploads/<name>.
+# Reachable through the frontend Vite proxy as /api/uploads/<name>.
+_UPLOAD_DIR = Path("uploads")
+_UPLOAD_DIR.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_UPLOAD_DIR)), name="uploads")
 
 
 @app.get("/", include_in_schema=False)

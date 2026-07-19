@@ -14,6 +14,7 @@ import type {
   ClientStats,
   ClientTag,
   Master,
+  Product,
   Salon,
   Service,
 } from '@/types'
@@ -142,6 +143,12 @@ const clientTags: ClientTag[] = [
   { id: 'tag_doim', label: 'Doimiy' },
   { id: 'tag_yangi', label: 'Yangi' },
   { id: 'tag_naqd', label: 'Naqd to‘lovchi' },
+]
+
+// ---------- seed: products ----------
+const products: Product[] = [
+  { id: 'prd_1', title: 'Soch uchun pomada', description: 'Kuchli fiksatsiya, mat effekt', price: 85000, imageUrl: null, order: 0, active: true },
+  { id: 'prd_2', title: 'Soqol moyi', description: 'Yumshatuvchi va parvarish', price: 65000, imageUrl: null, order: 1, active: true },
 ]
 
 // ---------- seed: clients ----------
@@ -292,6 +299,43 @@ export const api = {
     await wait(90)
     const s = services.find((x) => x.id === id)
     if (s) s.active = active
+  },
+
+  // ---- products ----
+  async getProducts(): Promise<Product[]> {
+    await wait(120)
+    return structuredClone(products)
+  },
+
+  async saveProduct(
+    input: Omit<Product, 'id' | 'active'> & { id?: string; active?: boolean },
+  ): Promise<Product> {
+    await wait(150)
+    if (input.id) {
+      const idx = products.findIndex((p) => p.id === input.id)
+      products[idx] = { ...products[idx], ...input, id: input.id }
+      return structuredClone(products[idx])
+    }
+    const created: Product = { ...input, id: uid('prd'), active: input.active ?? true }
+    products.push(created)
+    return structuredClone(created)
+  },
+
+  async toggleProduct(id: string, active: boolean): Promise<void> {
+    await wait(90)
+    const p = products.find((x) => x.id === id)
+    if (p) p.active = active
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await wait(120)
+    const idx = products.findIndex((p) => p.id === id)
+    if (idx >= 0) products.splice(idx, 1)
+  },
+
+  async uploadImage(file: File): Promise<string> {
+    await wait(120)
+    return URL.createObjectURL(file) // mock: local blob URL for preview
   },
 
   async getMasters(): Promise<Master[]> {

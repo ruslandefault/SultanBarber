@@ -11,6 +11,7 @@ import type {
   AvailabilitySlot,
   BookingDraft,
   Master,
+  Product,
   Salon,
   SalonSettings,
   Service,
@@ -57,6 +58,14 @@ export const mockApi = {
     await delay(400)
     const appt = mock.upcoming.find((a) => a.id === id)
     if (appt) appt.status = 'cancelled'
+  },
+
+  async getProducts(): Promise<Product[]> {
+    await delay(300)
+    return [
+      { id: 'p1', title: 'Soch uchun pomada', description: 'Kuchli fiksatsiya, mat effekt', priceSoum: 85000, imageUrl: null },
+      { id: 'p2', title: 'Soqol moyi', description: 'Yumshatuvchi va parvarish', priceSoum: 65000, imageUrl: null },
+    ]
   },
 }
 

@@ -125,6 +125,13 @@ export const IconUpload = (p: P) => (
   </svg>
 )
 
+export const IconBag = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 8h12l-.8 11.2A1.5 1.5 0 0 1 15.7 20.6H8.3a1.5 1.5 0 0 1-1.5-1.4L6 8Z" />
+    <path d="M9 8V6.5a3 3 0 0 1 6 0V8" />
+  </svg>
+)
+
 export const IconMap = (p: P) => (
   <svg {...base(p)}>
     <path d="M12 21s-6.5-5.5-6.5-10.5A6.5 6.5 0 0 1 18.5 10.5C18.5 15.5 12 21 12 21Z" />

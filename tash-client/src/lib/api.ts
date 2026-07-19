@@ -20,6 +20,7 @@ import type {
   AvailabilitySlot,
   BookingDraft,
   Master,
+  Product,
   Salon,
   SalonSettings,
   Service,
@@ -28,6 +29,13 @@ import type {
 import { mockApi } from './api.mock'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
+
+/** Resolve a stored media path ("/uploads/x.jpg") to a loadable URL. */
+export function mediaUrl(path: string | null | undefined): string {
+  if (!path) return ''
+  if (/^https?:\/\//.test(path) || path.startsWith('data:')) return path
+  return `${BASE_URL}${path}`
+}
 const MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 let initDataRaw = ''
@@ -147,6 +155,23 @@ interface BeAppointmentCreateOut {
 interface BeMyAppointments {
   upcoming: BeAppointment[]
   past: BeAppointment[]
+}
+interface BeProduct {
+  id: number
+  title: string
+  description: string | null
+  price: number
+  image_url: string | null
+}
+
+function toProduct(p: BeProduct): Product {
+  return {
+    id: String(p.id),
+    title: p.title,
+    description: p.description ?? undefined,
+    priceSoum: p.price,
+    imageUrl: p.image_url,
+  }
 }
 
 // ── Enrichment cache ────────────────────────────────────────────
@@ -326,6 +351,11 @@ const realApi = {
 
   async cancelAppointment(id: string): Promise<void> {
     await http(`/appointments/${id}/cancel`, { method: 'POST' })
+  },
+
+  async getProducts(): Promise<Product[]> {
+    const rows = await http<BeProduct[]>('/products')
+    return rows.map(toProduct)
   },
 }
 

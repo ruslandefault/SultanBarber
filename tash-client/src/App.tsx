@@ -7,6 +7,7 @@ import { Splash } from '@/components/Splash'
 const SalonHome = lazy(() => import('@/routes/SalonHome'))
 const Booking = lazy(() => import('@/routes/Booking'))
 const MyBookings = lazy(() => import('@/routes/MyBookings'))
+const Products = lazy(() => import('@/routes/Products'))
 const Style = lazy(() => import('@/routes/Style'))
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<SalonHome />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/appointments" element={<MyBookings />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/style" element={<Style />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

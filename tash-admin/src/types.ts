@@ -86,6 +86,16 @@ export interface Master {
   isActive: boolean
 }
 
+export interface Product {
+  id: string
+  title: string
+  description: string
+  price: number // so'm
+  imageUrl: string | null
+  order: number
+  active: boolean
+}
+
 export interface ClientTag {
   id: string
   label: string

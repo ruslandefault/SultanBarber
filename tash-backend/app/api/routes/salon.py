@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.api.deps import DbDep, _default_salon_id
 from app.core.errors import NotFoundError
 from app.models.master import Master
+from app.models.product import Product
 from app.models.salon import Salon
 from app.models.service import Service, ServiceCategory
 from app.schemas.catalog import (
@@ -16,6 +17,7 @@ from app.schemas.catalog import (
     SalonProfileOut,
     ServiceOut,
 )
+from app.schemas.product import ProductOut
 
 router = APIRouter(tags=["salon"])
 
@@ -68,3 +70,17 @@ async def get_salon(db: DbDep) -> SalonProfileOut:
         categories=cat_out,
         masters=[MasterOut.model_validate(m) for m in masters],
     )
+
+
+@router.get("/products", response_model=list[ProductOut])
+async def list_public_products(db: DbDep) -> list[ProductOut]:
+    """Public product catalogue for the client Mini App."""
+    salon_id = await _default_salon_id(db)
+    rows = (
+        await db.execute(
+            select(Product)
+            .where(Product.salon_id == salon_id, Product.is_active.is_(True))
+            .order_by(Product.sort_order, Product.id)
+        )
+    ).scalars().all()
+    return [ProductOut.model_validate(p) for p in rows]

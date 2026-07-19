@@ -62,7 +62,24 @@ export default function SalonHome() {
         )}
 
         {/* Services */}
-        <Section title="Xizmatlar">
+        <Section
+          title="Xizmatlar"
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                haptics.selection()
+                navigate('/products')
+              }}
+              className="inline-flex items-center gap-1 rounded-full border border-hairline bg-slate px-3 py-1 text-xs text-brass active:scale-[0.97]"
+            >
+              Mahsulotlar
+              <svg viewBox="0 0 20 20" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                <path d="M7 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          }
+        >
           {loading || !data ? (
             <div className="space-y-2">
               <Skeleton className="h-14 w-full" />
@@ -195,10 +212,21 @@ function MapCard({ address, lat, lng }: { address: string; lat?: number; lng?: n
 }
 
 // ── Small pieces ──────────────────────────────────────────────
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string
+  action?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <section>
-      <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-stone">{title}</h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-stone">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   )

@@ -44,6 +44,7 @@ import type {
   Master,
   MasterSchedule,
   PaymentMethod,
+  Product,
   Salon,
   Service,
   WorkingHours,
@@ -61,6 +62,15 @@ interface BServiceOut {
   name: string
   duration_min: number
   price: number
+  sort_order: number
+  is_active: boolean
+}
+interface BProductOut {
+  id: number
+  title: string
+  description: string | null
+  price: number
+  image_url: string | null
   sort_order: number
   is_active: boolean
 }
@@ -208,6 +218,18 @@ function mapService(s: BServiceOut): Service {
     price: s.price,
     active: s.is_active,
     order: s.sort_order,
+  }
+}
+
+function mapProduct(p: BProductOut): Product {
+  return {
+    id: String(p.id),
+    title: p.title,
+    description: p.description ?? '',
+    price: p.price,
+    imageUrl: p.image_url,
+    order: p.sort_order,
+    active: p.is_active,
   }
 }
 
@@ -456,6 +478,44 @@ const realApi = {
 
   async toggleService(id: string, active: boolean): Promise<void> {
     await http.put<BServiceOut>(`/admin/services/${id}`, { is_active: active })
+  },
+
+  // ---- products ----
+  async getProducts(): Promise<Product[]> {
+    const rows = await http.get<BProductOut[]>('/admin/products')
+    return rows.map(mapProduct)
+  },
+
+  async saveProduct(
+    input: Omit<Product, 'id' | 'active'> & { id?: string; active?: boolean },
+  ): Promise<Product> {
+    const body = {
+      title: input.title,
+      description: input.description || null,
+      price: input.price,
+      image_url: input.imageUrl,
+      sort_order: input.order,
+      ...(input.active !== undefined ? { is_active: input.active } : {}),
+    }
+    const out = input.id
+      ? await http.put<BProductOut>(`/admin/products/${input.id}`, body)
+      : await http.post<BProductOut>('/admin/products', body)
+    return mapProduct(out)
+  },
+
+  async toggleProduct(id: string, active: boolean): Promise<void> {
+    await http.put<BProductOut>(`/admin/products/${id}`, { is_active: active })
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await http.del(`/admin/products/${id}`)
+  },
+
+  async uploadImage(file: File): Promise<string> {
+    const form = new FormData()
+    form.append('file', file)
+    const out = await http.upload<{ url: string }>('/admin/upload', form)
+    return out.url
   },
 
   // ---- masters ----
