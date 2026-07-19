@@ -268,33 +268,24 @@ function Step2({
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl text-bone">Ustani tanlang</h1>
-      <button
-        type="button"
-        onClick={() => onSelect(ANY)}
-        aria-pressed={selected === ANY}
-        className={`flex w-full items-center gap-3 rounded-[14px] border bg-slate p-3.5 text-left transition-[border-color] duration-150 ${
-          selected === ANY ? 'border-brass' : 'border-hairline'
-        }`}
-      >
-        <span className="grid size-11 place-items-center rounded-full bg-brass/15 text-brass">
-          <UsersIcon />
-        </span>
-        <span>
-          <span className="block text-base font-medium text-bone">Farqi yo‘q</span>
-          <span className="block text-sm text-stone">Eng yaqin bo‘sh usta</span>
-        </span>
-      </button>
-      <div className="space-y-2">
-        {masters.map((m) => (
-          <MasterCard
-            key={m.id}
-            master={m}
-            variant="row"
-            selected={selected === m.id}
-            onClick={() => onSelect(m.id)}
-          />
-        ))}
-      </div>
+      {masters.length === 0 ? (
+        <div className="rounded-[14px] border border-hairline bg-slate px-4 py-8 text-center">
+          <p className="text-sm text-bone">Bu xizmat uchun usta yo‘q</p>
+          <p className="mt-1 text-xs text-stone">Boshqa xizmatni tanlab ko‘ring</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {masters.map((m) => (
+            <MasterCard
+              key={m.id}
+              master={m}
+              variant="row"
+              selected={selected === m.id}
+              onClick={() => onSelect(m.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -509,15 +500,6 @@ function CheckIcon({ large = false }: { large?: boolean }) {
   return (
     <svg viewBox="0 0 20 20" className={large ? 'size-7' : 'size-3.5'} fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
       <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function UsersIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" strokeLinecap="round" />
-      <path d="M16 5.5a3 3 0 0 1 0 6M17.5 19c0-2-.8-3.7-2-4.8" strokeLinecap="round" />
     </svg>
   )
 }

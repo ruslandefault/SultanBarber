@@ -22,7 +22,8 @@ import {
   formatTime,
   minutesOfDay,
   pad,
-  toYmd,
+  tashkentToday,
+  ymdOf,
 } from '@/lib/format'
 import { mediaUrl } from '@/lib/http'
 import { cn } from '@/lib/cn'
@@ -78,7 +79,7 @@ export function AppointmentSheet({
   // --- booking fields ---
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [masterId, setMasterId] = useState('')
-  const [dateYmd, setDateYmd] = useState(toYmd(new Date()))
+  const [dateYmd, setDateYmd] = useState(tashkentToday())
   const [startHHMM, setStartHHMM] = useState('10:00')
   const [status, setStatus] = useState<AppointmentStatus>('booked')
   const [note, setNote] = useState('')
@@ -104,9 +105,8 @@ export function AppointmentSheet({
       setClientId(editing.clientId)
       setServiceIds([...editing.serviceIds])
       setMasterId(editing.masterId)
-      const d = new Date(editing.start)
-      setDateYmd(toYmd(d))
-      setStartHHMM(`${pad(d.getHours())}:${pad(d.getMinutes())}`)
+      setDateYmd(ymdOf(editing.start))
+      setStartHHMM(formatTime(editing.start))
       setStatus(editing.status === 'cancelled' ? 'booked' : editing.status)
       setNote(editing.note)
       setPayAmount(editing.payment ? String(editing.payment.amount) : '')
@@ -121,11 +121,10 @@ export function AppointmentSheet({
       const pm = prefill?.masterId ?? masters[0]?.id ?? ''
       setMasterId(pm)
       if (prefill?.start) {
-        const d = new Date(prefill.start)
-        setDateYmd(toYmd(d))
-        setStartHHMM(`${pad(d.getHours())}:${pad(d.getMinutes())}`)
+        setDateYmd(ymdOf(prefill.start))
+        setStartHHMM(formatTime(prefill.start))
       } else {
-        setDateYmd(toYmd(new Date()))
+        setDateYmd(tashkentToday())
         setStartHHMM('10:00')
       }
     }

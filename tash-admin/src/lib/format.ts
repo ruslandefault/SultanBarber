@@ -15,10 +15,20 @@ export function formatMoney(value: number): string {
   return `${formatSom(value)}${THIN_SPACE}so'm`
 }
 
-// "09:30"
+// Salon business timezone is fixed Asia/Tashkent (UTC+5, no DST). All schedule
+// math uses this offset so admin times match the bot regardless of the admin
+// computer's own timezone.
+const TASHKENT_OFFSET_MIN = 5 * 60
+
+/** A Date whose UTC fields equal the Tashkent wall-clock of `iso`. */
+function tashkent(iso: string): Date {
+  return new Date(new Date(iso).getTime() + TASHKENT_OFFSET_MIN * 60000)
+}
+
+// "09:30" (Asia/Tashkent)
 export function formatTime(iso: string): string {
-  const d = new Date(iso)
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const d = tashkent(iso)
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
 }
 
 export function pad(n: number): string {
@@ -125,17 +135,26 @@ export function addMinutes(iso: string, min: number): string {
   return new Date(new Date(iso).getTime() + min * 60000).toISOString()
 }
 
-// minutes since midnight for a given iso datetime (local)
+// minutes since midnight (Asia/Tashkent) for a given iso datetime
 export function minutesOfDay(iso: string): number {
-  const d = new Date(iso)
-  return d.getHours() * 60 + d.getMinutes()
+  const d = tashkent(iso)
+  return d.getUTCHours() * 60 + d.getUTCMinutes()
 }
 
-// build an ISO datetime from a local date + "HH:mm"
+// build an ISO datetime from a date + "HH:mm" interpreted as Tashkent wall-clock
 export function combineDateTime(dateYmd: string, hhmm: string): string {
-  const [y, m, d] = dateYmd.split('-').map(Number)
-  const [hh, mm] = hhmm.split(':').map(Number)
-  return new Date(y, m - 1, d, hh, mm, 0, 0).toISOString()
+  return `${dateYmd}T${hhmm}:00+05:00`
+}
+
+// "2026-07-18" — the Tashkent calendar date of an iso instant
+export function ymdOf(iso: string): string {
+  const d = tashkent(iso)
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`
+}
+
+// today's date in Asia/Tashkent, "YYYY-MM-DD"
+export function tashkentToday(): string {
+  return ymdOf(new Date().toISOString())
 }
 
 // "2026-07-18" (local)
