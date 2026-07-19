@@ -145,15 +145,14 @@ export function AppointmentSheet({
   )}`
 
   const master = masters.find((m) => m.id === masterId)
-  // services this master performs are surfaced first
+  // The master's assigned services are the source of truth: only show services
+  // this master performs (plus any already selected, so editing stays intact).
   const availableServices = useMemo(() => {
-    return [...services]
-      .filter((s) => s.active || serviceIds.includes(s.id))
-      .sort((a, b) => {
-        const am = master?.serviceIds.includes(a.id) ? 0 : 1
-        const bm = master?.serviceIds.includes(b.id) ? 0 : 1
-        return am - bm
-      })
+    return services.filter(
+      (s) =>
+        (s.active || serviceIds.includes(s.id)) &&
+        (!master || master.serviceIds.includes(s.id) || serviceIds.includes(s.id)),
+    )
   }, [services, master, serviceIds])
 
   const filteredClients = useMemo(() => {

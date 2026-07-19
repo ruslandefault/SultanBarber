@@ -92,8 +92,10 @@ class AppointmentService(Base):
     appointment_id: Mapped[int] = mapped_column(
         ForeignKey("appointments.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    service_id: Mapped[int] = mapped_column(
-        ForeignKey("services.id", ondelete="RESTRICT"), nullable=False
+    # SET NULL (not RESTRICT) so a service can be deleted; the snapshot below
+    # preserves name/price/duration for history.
+    service_id: Mapped[int | None] = mapped_column(
+        ForeignKey("services.id", ondelete="SET NULL"), nullable=True
     )
     # snapshots
     name: Mapped[str] = mapped_column(String(200), nullable=False)

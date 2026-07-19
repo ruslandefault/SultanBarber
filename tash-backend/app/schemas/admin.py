@@ -56,7 +56,7 @@ class ClientImportResult(BaseModel):
 # ---- Appointments (admin) ---------------------------------------------------
 
 class AdminAppointmentServiceOut(ORMModel):
-    service_id: int
+    service_id: int | None
     name: str
     price: int
     duration_min: int

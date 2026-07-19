@@ -484,6 +484,10 @@ const realApi = {
     await http.put<BServiceOut>(`/admin/services/${id}`, { is_active: active })
   },
 
+  async deleteService(id: string): Promise<void> {
+    await http.del(`/admin/services/${id}`)
+  },
+
   // ---- products ----
   async getProducts(): Promise<Product[]> {
     const rows = await http.get<BProductOut[]>('/admin/products')

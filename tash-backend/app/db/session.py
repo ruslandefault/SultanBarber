@@ -13,7 +13,10 @@ from app.core.config import settings
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
-    pool_pre_ping=True,
+    # NOTE: pool_pre_ping on the asyncpg pool can raise MissingGreenlet on
+    # checkout (the ping runs outside the request greenlet). Use pool_recycle
+    # instead to avoid stale connections on a long-running local DB.
+    pool_recycle=1800,
 )
 
 AsyncSessionLocal = async_sessionmaker(

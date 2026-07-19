@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import DbDep, OwnerDep
 from app.core.errors import NotFoundError
+from app.models.appointment import Appointment
 from app.models.master import Master, MasterService
 from app.models.salon import WorkingHours
 from app.models.service import Service, ServiceCategory
@@ -95,38 +96,71 @@ async def update_service(service_id: int, data: ServiceUpdate, db: DbDep, owner:
     return ServiceOut.model_validate(s)
 
 
-@router.delete("/services/{service_id}", response_model=ServiceOut)
-async def deactivate_service(service_id: int, db: DbDep, owner: OwnerDep):
-    """Soft-deactivate a service (never hard-deleted to preserve history)."""
+@router.delete("/services/{service_id}", status_code=204)
+async def delete_service(service_id: int, db: DbDep, owner: OwnerDep) -> None:
+    """Hard-delete a service. Master links (master_services) cascade; past
+    appointment snapshots keep their name/price and get service_id = NULL."""
     s = await db.get(Service, service_id)
     if s is None or s.salon_id != owner.salon_id:
         raise NotFoundError("Xizmat topilmadi", code="service_not_found")
-    s.is_active = False
+    await db.delete(s)
     await db.commit()
-    await db.refresh(s)
-    return ServiceOut.model_validate(s)
 
 
 # ---- Masters + working hours + service assignment ---------------------------
 
-async def _master_detail(db, master: Master) -> MasterDetailOut:
+async def _master_detail(db, master_id: int) -> MasterDetailOut:
+    # Column-level SELECTs return plain Row tuples (not ORM objects), so reading
+    # their fields can never trigger an async lazy-load after a commit
+    # (which would raise MissingGreenlet). This is the safe way to build a
+    # detail response right after writing.
+    mrow = (
+        await db.execute(
+            select(
+                Master.id,
+                Master.name,
+                Master.specialty,
+                Master.photo_url,
+                Master.bio,
+                Master.sort_order,
+                Master.is_active,
+            ).where(Master.id == master_id)
+        )
+    ).one()
     wh = (
         await db.execute(
-            select(WorkingHours)
-            .where(WorkingHours.master_id == master.id)
+            select(
+                WorkingHours.weekday,
+                WorkingHours.start_time,
+                WorkingHours.end_time,
+                WorkingHours.is_day_off,
+            )
+            .where(WorkingHours.master_id == master_id)
             .order_by(WorkingHours.weekday)
         )
-    ).scalars().all()
+    ).all()
     svc_ids = (
         await db.execute(
-            select(MasterService.service_id).where(MasterService.master_id == master.id)
+            select(MasterService.service_id).where(MasterService.master_id == master_id)
         )
     ).scalars().all()
-    # Build from scalar columns only — never touch ORM relationships here, or
-    # pydantic will trigger an async lazy-load outside the greenlet (MissingGreenlet 500).
     return MasterDetailOut(
-        **MasterOut.model_validate(master).model_dump(),
-        working_hours=[WorkingHoursOut.model_validate(w) for w in wh],
+        id=mrow.id,
+        name=mrow.name,
+        specialty=mrow.specialty,
+        photo_url=mrow.photo_url,
+        bio=mrow.bio,
+        sort_order=mrow.sort_order,
+        is_active=mrow.is_active,
+        working_hours=[
+            WorkingHoursOut(
+                weekday=r.weekday,
+                start_time=r.start_time,
+                end_time=r.end_time,
+                is_day_off=r.is_day_off,
+            )
+            for r in wh
+        ],
         service_ids=list(svc_ids),
     )
 
@@ -146,7 +180,7 @@ async def get_master(master_id: int, db: DbDep, owner: OwnerDep):
     m = await db.get(Master, master_id)
     if m is None or m.salon_id != owner.salon_id:
         raise NotFoundError("Usta topilmadi", code="master_not_found")
-    return await _master_detail(db, m)
+    return await _master_detail(db, m.id)
 
 
 @router.post("/masters", response_model=MasterDetailOut, status_code=201)
@@ -159,7 +193,7 @@ async def create_master(data: MasterCreate, db: DbDep, owner: OwnerDep):
         db.add(MasterService(master_id=m.id, service_id=sid))
     await db.commit()
     await db.refresh(m)
-    return await _master_detail(db, m)
+    return await _master_detail(db, m.id)
 
 
 @router.put("/masters/{master_id}", response_model=MasterDetailOut)
@@ -176,7 +210,7 @@ async def update_master(master_id: int, data: MasterUpdate, db: DbDep, owner: Ow
             db.add(MasterService(master_id=m.id, service_id=sid))
     await db.commit()
     await db.refresh(m)
-    return await _master_detail(db, m)
+    return await _master_detail(db, m.id)
 
 
 @router.put("/masters/{master_id}/working-hours", response_model=MasterDetailOut)
@@ -191,4 +225,20 @@ async def set_working_hours(
         db.add(WorkingHours(master_id=master_id, **h.model_dump()))
     await db.commit()
     await db.refresh(m)
-    return await _master_detail(db, m)
+    return await _master_detail(db, m.id)
+
+
+@router.delete("/masters/{master_id}", status_code=204)
+async def delete_master(master_id: int, db: DbDep, owner: OwnerDep) -> None:
+    """Hard-delete a master, including their appointments.
+
+    appointments.master_id is RESTRICT, so remove the master's appointments
+    first (their services/payments/reminders cascade). working_hours and
+    master_services cascade on the master delete itself.
+    """
+    m = await db.get(Master, master_id)
+    if m is None or m.salon_id != owner.salon_id:
+        raise NotFoundError("Usta topilmadi", code="master_not_found")
+    await db.execute(delete(Appointment).where(Appointment.master_id == master_id))
+    await db.delete(m)
+    await db.commit()

@@ -25,6 +25,7 @@ import {
 import { api } from '@/lib/api'
 import {
   addDays,
+  combineDateTime,
   formatDateLong,
   isoWeekday,
   minutesOfDay,
@@ -252,6 +253,16 @@ export function Journal() {
 // ============================================================
 // DAY GRID
 // ============================================================
+type Win = { off: boolean; fromMin: number; toMin: number }
+
+function masterWindow(m: Master, weekday: number): Win {
+  const d = m.schedule.find((s) => s.weekday === weekday)
+  if (!d || !d.works) return { off: true, fromMin: 0, toMin: 0 }
+  const [fh, fm] = d.from.split(':').map(Number)
+  const [th, tm] = d.to.split(':').map(Number)
+  return { off: false, fromMin: fh * 60 + fm, toMin: th * 60 + tm }
+}
+
 function DayGrid({
   masters,
   activeMasterId,
@@ -269,7 +280,14 @@ function DayGrid({
   onEmptyClick: (masterId: string, startIso: string) => void
   onApptClick: (a: AppointmentView) => void
 }) {
-  const { fromMin, toMin } = dayHours
+  // Grid range = union of the masters' working windows for this weekday
+  // (falls back to the salon hours). Each master column greys out the hours
+  // outside their own schedule.
+  const wd = isoWeekday(cursor)
+  const windows = masters.map((m) => masterWindow(m, wd))
+  const openWins = windows.filter((w) => !w.off)
+  const fromMin = openWins.length ? Math.min(...openWins.map((w) => w.fromMin)) : dayHours.fromMin
+  const toMin = openWins.length ? Math.max(...openWins.map((w) => w.toMin)) : dayHours.toMin
   const rows: number[] = []
   for (let m = fromMin; m < toMin; m += ROW_MIN) rows.push(m)
   const gridHeight = ((toMin - fromMin) / ROW_MIN) * ROW_PX
@@ -318,9 +336,10 @@ function DayGrid({
         </div>
 
         {/* master columns */}
-        {masters.map((master) => {
+        {masters.map((master, mi) => {
           const hiddenOnMobile = master.id !== activeMasterId
           const col = appts.filter((a) => a.masterId === master.id)
+          const win = windows[mi]
           return (
             <div
               key={master.id}
@@ -344,26 +363,28 @@ function DayGrid({
 
               {/* slots */}
               <div className="relative" style={{ height: gridHeight }}>
-                {/* clickable empty rows (hour lines) */}
-                {rows.map((m, i) => (
-                  <button
-                    key={m}
-                    type="button"
-                    aria-label={`${pad(Math.floor(m / 60))}:${pad(m % 60)} bo‘sh`}
-                    onClick={() => {
-                      const d = new Date(cursor)
-                      d.setHours(Math.floor(m / 60), m % 60, 0, 0)
-                      onEmptyClick(master.id, d.toISOString())
-                    }}
-                    className={cn(
-                      'absolute left-0 right-0 hover:bg-brass/[0.06]',
-                      m % 60 === 0
-                        ? 'border-t border-hairline-light'
-                        : 'border-t border-hairline-light/40',
-                    )}
-                    style={{ top: i * ROW_PX, height: ROW_PX }}
-                  />
-                ))}
+                {/* clickable empty rows (hour lines); off-hours are greyed + disabled */}
+                {rows.map((m, i) => {
+                  const inWin = !win.off && m >= win.fromMin && m < win.toMin
+                  const hhmm = `${pad(Math.floor(m / 60))}:${pad(m % 60)}`
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={!inWin}
+                      aria-label={inWin ? `${hhmm} bo‘sh` : `${hhmm} ish vaqti emas`}
+                      onClick={() => onEmptyClick(master.id, combineDateTime(toYmd(cursor), hhmm))}
+                      className={cn(
+                        'absolute left-0 right-0 border-t',
+                        m % 60 === 0 ? 'border-hairline-light' : 'border-hairline-light/40',
+                        inWin
+                          ? 'hover:bg-brass/[0.06]'
+                          : 'cursor-not-allowed bg-[repeating-linear-gradient(45deg,rgba(28,31,34,0.03),rgba(28,31,34,0.03)_6px,transparent_6px,transparent_12px)]',
+                      )}
+                      style={{ top: i * ROW_PX, height: ROW_PX }}
+                    />
+                  )
+                })}
 
                 {/* TODO(drag-to-move): make these blocks draggable; on drop
                     compute new master/start, call api.isSlotFree + saveAppointment. */}

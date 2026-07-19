@@ -301,6 +301,12 @@ export const api = {
     if (s) s.active = active
   },
 
+  async deleteService(id: string): Promise<void> {
+    await wait(120)
+    const idx = services.findIndex((s) => s.id === id)
+    if (idx >= 0) services.splice(idx, 1)
+  },
+
   // ---- products ----
   async getProducts(): Promise<Product[]> {
     await wait(120)

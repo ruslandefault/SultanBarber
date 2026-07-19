@@ -269,15 +269,35 @@ function ServiceSheet({
     }
   }
 
+  async function remove() {
+    if (!service) return
+    if (!window.confirm(`"${service.name}" xizmatini o‘chirasizmi?`)) return
+    setSaving(true)
+    try {
+      await api.deleteService(service.id)
+      toast('O‘chirildi')
+      onSaved()
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title={service ? 'Xizmatni tahrirlash' : 'Yangi xizmat'}
       footer={
-        <Button variant="brass" className="w-full" onClick={save} disabled={saving}>
-          {saving ? 'Saqlanmoqda…' : 'Saqlash'}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button variant="brass" className="w-full" onClick={save} disabled={saving}>
+            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+          </Button>
+          {service && (
+            <Button variant="ghost" className="text-clay" onClick={remove} disabled={saving}>
+              O‘chirish
+            </Button>
+          )}
+        </div>
       }
     >
       <div className="flex flex-col gap-4">
