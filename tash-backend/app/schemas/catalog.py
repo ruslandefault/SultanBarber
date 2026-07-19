@@ -105,18 +105,38 @@ class MasterUpdate(BaseModel):
     service_ids: list[int] | None = None
 
 
+class SalonHour(BaseModel):
+    weekday: int
+    open: bool = True
+    from_: str = Field(default="09:00", alias="from")
+    to: str = "21:00"
+
+    model_config = {"populate_by_name": True}
+
+
 class SalonOut(ORMModel):
     id: int
     name: str
     description: str | None
     address: str | None
     phone: str | None
+    instagram: str | None = None
     photo_url: str | None
     timezone: str
     is_active: bool
+    working_hours: list[SalonHour] | None = None
 
 
 class SalonProfileOut(BaseModel):
     salon: SalonOut
     categories: list[CategoryOut]
     masters: list[MasterOut]
+
+
+class SalonProfileUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = None
+    address: str | None = None
+    phone: str | None = None
+    instagram: str | None = None
+    working_hours: list[SalonHour] | None = None

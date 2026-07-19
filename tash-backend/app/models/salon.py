@@ -4,6 +4,7 @@ from datetime import time as time_
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     ForeignKey,
@@ -30,9 +31,13 @@ class Salon(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(String(2000))
     address: Mapped[str | None] = mapped_column(String(500))
     phone: Mapped[str | None] = mapped_column(String(32))
+    instagram: Mapped[str | None] = mapped_column(String(200))
     photo_url: Mapped[str | None] = mapped_column(String(500))
     timezone: Mapped[str] = mapped_column(String(64), default="Asia/Tashkent", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Salon-level default weekly hours (display + applied to all masters on save).
+    # list of {weekday:int, open:bool, from:str "HH:MM", to:str "HH:MM"}
+    working_hours: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     settings: Mapped["SalonSettings"] = relationship(
         back_populates="salon", uselist=False, cascade="all, delete-orphan"

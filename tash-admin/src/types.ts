@@ -83,6 +83,7 @@ export interface Master {
   color: string // accent used in the journal column
   schedule: MasterSchedule[]
   serviceIds: string[]
+  isActive: boolean
 }
 
 export interface ClientTag {

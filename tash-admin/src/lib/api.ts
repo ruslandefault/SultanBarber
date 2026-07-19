@@ -80,15 +80,27 @@ interface BMasterOut {
   sort_order: number
   is_active: boolean
 }
+interface BWorkingHour {
+  weekday: number
+  start_time: string | null
+  end_time: string | null
+  is_day_off: boolean
+}
+interface BMasterDetailOut extends BMasterOut {
+  working_hours: BWorkingHour[]
+  service_ids: number[]
+}
 interface BSalonOut {
   id: number
   name: string
   description: string | null
   address: string | null
   phone: string | null
+  instagram: string | null
   photo_url: string | null
   timezone: string
   is_active: boolean
+  working_hours: { weekday: number; open: boolean; from: string; to: string }[] | null
 }
 interface BSalonProfileOut {
   salon: BSalonOut
@@ -210,8 +222,31 @@ function mapMaster(m: BMasterOut): Master {
     specialty: m.specialty ?? '',
     avatarUrl: m.photo_url,
     color: masterColor(m.id),
-    schedule: defaultSchedule(), // gap: detail endpoint unavailable
-    serviceIds: [], // gap: detail endpoint unavailable
+    isActive: m.is_active,
+    schedule: defaultSchedule(), // fallback if detail fetch fails
+    serviceIds: [],
+  }
+}
+
+function mapMasterDetail(d: BMasterDetailOut): Master {
+  const schedule = Array.from({ length: 7 }, (_, wd) => {
+    const wh = d.working_hours.find((w) => w.weekday === wd)
+    return {
+      weekday: wd,
+      works: wh ? !wh.is_day_off : false,
+      from: wh?.start_time?.slice(0, 5) ?? '09:00',
+      to: wh?.end_time?.slice(0, 5) ?? '21:00',
+    }
+  })
+  return {
+    id: String(d.id),
+    name: d.name,
+    specialty: d.specialty ?? '',
+    avatarUrl: d.photo_url,
+    color: masterColor(d.id),
+    isActive: d.is_active,
+    schedule,
+    serviceIds: d.service_ids.map(String),
   }
 }
 
@@ -269,6 +304,7 @@ function fallbackMaster(id: string): Master {
     color: masterColor(Number(id) || 0),
     schedule: defaultSchedule(),
     serviceIds: [],
+    isActive: true,
   }
 }
 
@@ -310,10 +346,18 @@ const realApi = {
       name: s.name,
       address: s.address ?? '',
       phone: s.phone ?? '',
-      instagram: '', // gap: no backend field
+      instagram: s.instagram ?? '',
       logoUrl: s.photo_url,
-      coverUrl: null, // gap: no backend field
-      workingHours: defaultWorkingHours(), // gap: no salon-level schedule
+      coverUrl: null, // gap: no backend field (file upload)
+      workingHours:
+        s.working_hours && s.working_hours.length > 0
+          ? s.working_hours.map((w) => ({
+              weekday: w.weekday,
+              open: w.open,
+              from: w.from,
+              to: w.to,
+            }))
+          : defaultWorkingHours(),
       notifications: {
         telegramReminder: settings.reminder_telegram,
         reminderTimings: settings.reminder_offsets.map((m) => Math.round(m / 60)),
@@ -330,9 +374,7 @@ const realApi = {
   },
 
   async updateSalon(patch: Partial<Salon>): Promise<Salon> {
-    // Only notifications / prepayment / cancellation map to the backend
-    // (PUT /admin/settings). Salon profile + workingHours have no admin
-    // endpoint and are not persisted (see gaps note at top of file).
+    // Settings (notifications / prepayment / cancellation) → PUT /admin/settings
     const body: Record<string, unknown> = {}
     if (patch.notifications) {
       body.reminder_telegram = patch.notifications.telegramReminder
@@ -350,10 +392,26 @@ const realApi = {
     if (Object.keys(body).length > 0) {
       await http.put<BSettingsOut>('/admin/settings', body)
     }
-    // Re-read persisted state, then overlay the patch so the UI reflects
-    // the values the user just typed (incl. non-persisted profile fields).
-    const fresh = await this.getSalon()
-    return { ...fresh, ...patch }
+
+    // Salon profile (name/address/phone/instagram) + working hours → PUT /admin/salon
+    const salonBody: Record<string, unknown> = {}
+    if (patch.name !== undefined) salonBody.name = patch.name
+    if (patch.address !== undefined) salonBody.address = patch.address
+    if (patch.phone !== undefined) salonBody.phone = patch.phone
+    if (patch.instagram !== undefined) salonBody.instagram = patch.instagram
+    if (patch.workingHours !== undefined) {
+      salonBody.working_hours = patch.workingHours.map((w) => ({
+        weekday: w.weekday,
+        open: w.open,
+        from: w.from,
+        to: w.to,
+      }))
+    }
+    if (Object.keys(salonBody).length > 0) {
+      await http.put<BSalonOut>('/admin/salon', salonBody)
+    }
+
+    return this.getSalon()
   },
 
   // ---- categories ----
@@ -402,12 +460,32 @@ const realApi = {
 
   // ---- masters ----
   async getMasters(): Promise<Master[]> {
+    // Return ALL masters (active + inactive) with real schedule/serviceIds from
+    // the detail endpoint. Callers that only want active ones (journal columns,
+    // booking) filter by `isActive` themselves.
     const rows = await http.get<BMasterOut[]>('/admin/masters')
-    // Only active masters appear as journal columns (matches mock intent).
-    return rows.filter((m) => m.is_active).map(mapMaster)
+    const details = await Promise.all(
+      rows.map(async (m) => {
+        try {
+          return await http.get<BMasterDetailOut>(`/admin/masters/${m.id}`)
+        } catch {
+          return null
+        }
+      }),
+    )
+    return rows.map((m, i) => (details[i] ? mapMasterDetail(details[i]!) : mapMaster(m)))
   },
 
-  async saveMaster(input: Omit<Master, 'id'> & { id?: string }): Promise<Master> {
+  async deleteMaster(id: string): Promise<void> {
+    await http.del(`/admin/masters/${id}`)
+  },
+
+  async setMasterActive(id: string, active: boolean): Promise<void> {
+    // The backend update response serializes fine now; is_active is a MasterUpdate field.
+    await http.put<BMasterDetailOut>(`/admin/masters/${id}`, { is_active: active })
+  },
+
+  async saveMaster(input: Omit<Master, 'id' | 'isActive'> & { id?: string }): Promise<Master> {
     const workingHours = input.schedule.map((d) => ({
       weekday: d.weekday,
       start_time: d.from,
@@ -461,6 +539,7 @@ const realApi = {
       color: input.color,
       schedule: input.schedule,
       serviceIds: input.serviceIds,
+      isActive: true,
     }
   },
 

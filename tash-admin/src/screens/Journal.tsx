@@ -66,11 +66,13 @@ export function Journal() {
       api.getClients(),
       api.getServices(),
     ]).then(([s, m, c, srv]) => {
+      // Jadvalda faqat faol ustalar ustun sifatida ko'rsatiladi.
+      const activeMasters = m.filter((x) => x.isActive)
       setSalon(s)
-      setMasters(m)
+      setMasters(activeMasters)
       setClients(c)
       setServices(srv)
-      setActiveMasterId(m[0]?.id ?? '')
+      setActiveMasterId(activeMasters[0]?.id ?? '')
     })
   }, [])
 
@@ -277,6 +279,7 @@ function DayGrid({
   const nowMin = minutesOfDay(new Date().toISOString())
   const showNow = isToday && nowMin >= fromMin && nowMin <= toMin
   const nowTop = ((nowMin - fromMin) / ROW_MIN) * ROW_PX
+  const nowLabel = `${pad(Math.floor(nowMin / 60))}:${pad(nowMin % 60)}`
 
   useEffect(() => {
     if (showNow && nowRef.current) {
@@ -296,7 +299,7 @@ function DayGrid({
           Bugun bandlov yo‘q — bo‘sh katakni bosib qo‘shing.
         </div>
       )}
-      <div className="flex min-w-fit">
+      <div className="relative flex min-w-fit">
         {/* time gutter */}
         <div className="sticky left-0 z-10 w-12 shrink-0 bg-bone">
           <div className="h-12" />
@@ -379,24 +382,28 @@ function DayGrid({
                     </div>
                   )
                 })}
-
-                {/* now line */}
-                {showNow && (
-                  <div
-                    ref={nowRef}
-                    className="pointer-events-none absolute left-0 right-0 z-20"
-                    style={{ top: nowTop }}
-                  >
-                    <div className="relative">
-                      <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-brass" />
-                      <div className="h-px bg-brass" />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           )
         })}
+
+        {/* Hozirgi vaqt — butun grid bo'ylab yagona yashil gorizontal chiziq */}
+        {showNow && (
+          <div
+            ref={nowRef}
+            className="pointer-events-none absolute left-0 right-0 z-30"
+            style={{ top: 48 + nowTop }}
+          >
+            <div className="relative border-t-2 border-[#22c55e]">
+              <span className="absolute -top-[7px] left-0 flex items-center gap-1">
+                <span className="h-3 w-3 rounded-full border-2 border-white bg-[#22c55e] shadow" />
+                <span className="tabular rounded bg-[#22c55e] px-1 py-0.5 text-[10px] font-bold leading-none text-white">
+                  {nowLabel}
+                </span>
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -10,7 +10,7 @@ import { Toggle } from '@/components/ui/Toggle'
 import { Sheet } from '@/components/ui/Sheet'
 import { Field, Input, Label } from '@/components/ui/Field'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { IconPlus, IconChevronRight, IconCheck } from '@/components/icons'
+import { IconPlus, IconCheck } from '@/components/icons'
 import { useToast } from '@/components/ui/Toast'
 import { api } from '@/lib/api'
 import { formatMoney, formatDuration, weekdayName } from '@/lib/format'
@@ -377,7 +377,7 @@ function MastersTab() {
           {masters.map((m) => {
             const workDays = m.schedule.filter((d) => d.works).length
             return (
-              <Card key={m.id} className="p-4">
+              <Card key={m.id} className={cn('p-4', !m.isActive && 'opacity-60')}>
                 <div className="flex items-center gap-3">
                   <Avatar name={m.name} color={m.color} size="lg" />
                   <div className="min-w-0 flex-1">
@@ -389,13 +389,18 @@ function MastersTab() {
                   <button
                     type="button"
                     onClick={() => setEditing(m)}
-                    className="rounded-[10px] p-1.5 text-stone hover:bg-graphite/5 hover:text-graphite"
+                    className="rounded-[10px] px-2.5 py-1.5 text-xs font-medium text-brass hover:bg-brass/10"
                     aria-label="Tahrirlash"
                   >
-                    <IconChevronRight />
+                    Tahrirlash
                   </button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
+                  {!m.isActive && (
+                    <span className="rounded-full bg-clay/10 px-2.5 py-0.5 text-2xs font-medium text-clay">
+                      Nofaol
+                    </span>
+                  )}
                   <span className="rounded-full bg-graphite/[0.05] px-2.5 py-0.5 text-2xs text-stone">
                     {workDays} ish kuni
                   </span>
@@ -497,15 +502,59 @@ function MasterSheet({
     }
   }
 
+  async function toggleActive() {
+    if (!master) return
+    setSaving(true)
+    try {
+      await api.setMasterActive(master.id, !master.isActive)
+      toast(master.isActive ? 'Nofaol qilindi' : 'Faollashtirildi')
+      onSaved()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function remove() {
+    if (!master) return
+    if (
+      !window.confirm(
+        `"${master.name}" ustasini butunlay o‘chirasizmi? Bu amalni ortga qaytarib bo‘lmaydi.`,
+      )
+    )
+      return
+    setSaving(true)
+    try {
+      await api.deleteMaster(master.id)
+      toast('O‘chirildi')
+      onSaved()
+    } catch {
+      toast('O‘chirib bo‘lmadi — bu ustada bandlovlar bor. O‘rniga “Nofaol qilish”dan foydalaning.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title={master ? 'Ustani tahrirlash' : 'Yangi usta'}
       footer={
-        <Button variant="brass" className="w-full" onClick={save} disabled={saving}>
-          {saving ? 'Saqlanmoqda…' : 'Saqlash'}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button variant="brass" className="w-full" onClick={save} disabled={saving}>
+            {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+          </Button>
+          {master && (
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={toggleActive} disabled={saving}>
+                {master.isActive ? 'Nofaol qilish' : 'Faollashtirish'}
+              </Button>
+              <Button variant="ghost" className="text-clay" onClick={remove} disabled={saving}>
+                O‘chirish
+              </Button>
+            </div>
+          )}
+        </div>
       }
     >
       <div className="flex flex-col gap-4">

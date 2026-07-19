@@ -102,6 +102,7 @@ const masters: Master[] = [
     color: '#C9A24B',
     schedule: week('09:00', '21:00', [6]),
     serviceIds: ['srv_1', 'srv_2', 'srv_4', 'srv_5', 'srv_6', 'srv_7'],
+    isActive: true,
   },
   {
     id: 'mst_2',
@@ -111,6 +112,7 @@ const masters: Master[] = [
     color: '#5B8A6A',
     schedule: week('10:00', '20:00', [0]),
     serviceIds: ['srv_1', 'srv_2', 'srv_3', 'srv_4', 'srv_6'],
+    isActive: true,
   },
   {
     id: 'mst_3',
@@ -120,6 +122,7 @@ const masters: Master[] = [
     color: '#C25436',
     schedule: week('09:00', '18:00', [5, 6]),
     serviceIds: ['srv_1', 'srv_2', 'srv_3', 'srv_8'],
+    isActive: true,
   },
   {
     id: 'mst_4',
@@ -129,6 +132,7 @@ const masters: Master[] = [
     color: '#9A948A',
     schedule: week('12:00', '21:00', [3]),
     serviceIds: ['srv_2', 'srv_3', 'srv_4', 'srv_8'],
+    isActive: true,
   },
 ]
 
@@ -295,16 +299,28 @@ export const api = {
     return structuredClone(masters)
   },
 
-  async saveMaster(input: Omit<Master, 'id'> & { id?: string }): Promise<Master> {
+  async saveMaster(input: Omit<Master, 'id' | 'isActive'> & { id?: string }): Promise<Master> {
     await wait(160)
     if (input.id) {
       const idx = masters.findIndex((m) => m.id === input.id)
       masters[idx] = { ...masters[idx], ...input, id: input.id }
       return structuredClone(masters[idx])
     }
-    const created: Master = { ...input, id: uid('mst') }
+    const created: Master = { ...input, id: uid('mst'), isActive: true }
     masters.push(created)
     return structuredClone(created)
+  },
+
+  async deleteMaster(id: string): Promise<void> {
+    await wait(140)
+    const idx = masters.findIndex((m) => m.id === id)
+    if (idx >= 0) masters.splice(idx, 1)
+  },
+
+  async setMasterActive(id: string, active: boolean): Promise<void> {
+    await wait(120)
+    const m = masters.find((x) => x.id === id)
+    if (m) m.isActive = active
   },
 
   async getClients(): Promise<Client[]> {

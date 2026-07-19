@@ -179,11 +179,11 @@ export function AppointmentSheet({
     setFormError(null)
     setSlotError(null)
 
-    // validate client
+    // validate client — yangi mijoz uchun ism YOKI telefon (bittasi) yetarli
     let finalClientId = clientId
     if (newClient) {
-      if (!newName.trim() || !newPhone.trim()) {
-        setFormError('Yangi mijoz uchun ism va telefon kiriting.')
+      if (!newName.trim() && !newPhone.trim()) {
+        setFormError('Yangi mijoz uchun ism yoki telefon kiriting.')
         return
       }
     } else if (!finalClientId) {
@@ -215,8 +215,9 @@ export function AppointmentSheet({
       }
 
       if (newClient) {
+        // Ism kiritilmasa, telefonni nom sifatida ishlatamiz (backend ism talab qiladi).
         const created = await api.saveClient({
-          name: newName.trim(),
+          name: newName.trim() || newPhone.trim(),
           phone: newPhone.trim(),
           birthday: null,
           note: '',
