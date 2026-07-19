@@ -69,6 +69,7 @@ async def journal(
         Appointment.salon_id == user.salon_id,
         Appointment.start_at >= date_from,
         Appointment.start_at < date_to,
+        Appointment.status != AppointmentStatus.cancelled,
     ]
     if scoped_master is not None:
         conds.append(Appointment.master_id == scoped_master)
@@ -206,11 +207,13 @@ async def change_status(
     return AdminAppointmentOut.model_validate(appt)
 
 
-@router.delete("/appointments/{appointment_id}", response_model=AdminAppointmentOut)
-async def admin_cancel(appointment_id: int, db: DbDep, user: UserDep):
-    """Admin cancellation (no client cancel-window restriction)."""
+@router.delete("/appointments/{appointment_id}", status_code=204)
+async def admin_delete(appointment_id: int, db: DbDep, user: UserDep) -> None:
+    """Hard-delete an appointment so its slot becomes free again.
+
+    Related appointment_services / payments / reminders are removed by the
+    DB-level ON DELETE CASCADE on those foreign keys.
+    """
     appt = await _load_appt(db, user, appointment_id)
-    appt.status = AppointmentStatus.cancelled
+    await db.delete(appt)
     await db.commit()
-    appt = await _load_appt(db, user, appointment_id)
-    return AdminAppointmentOut.model_validate(appt)

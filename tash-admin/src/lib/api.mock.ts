@@ -468,9 +468,9 @@ export const api = {
     return composeView(created)
   },
 
-  async cancelAppointment(id: string): Promise<void> {
+  async deleteAppointment(id: string): Promise<void> {
     await wait(140)
-    const a = appointments.find((x) => x.id === id)
-    if (a) a.status = 'cancelled'
+    const idx = appointments.findIndex((x) => x.id === id)
+    if (idx >= 0) appointments.splice(idx, 1)
   },
 }

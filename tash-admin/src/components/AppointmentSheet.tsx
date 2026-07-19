@@ -250,13 +250,13 @@ export function AppointmentSheet({
     }
   }
 
-  async function handleCancel() {
+  async function handleDelete() {
     if (!editing) return
-    if (!window.confirm('Bandlovni bekor qilasizmi?')) return
+    if (!window.confirm('Bandlovni o‘chirasizmi? Vaqt bo‘shab qoladi.')) return
     setSaving(true)
     try {
-      await api.cancelAppointment(editing.id)
-      toast('Bekor qilindi')
+      await api.deleteAppointment(editing.id)
+      toast('O‘chirildi')
       onSaved()
       onClose()
     } finally {
@@ -283,8 +283,8 @@ export function AppointmentSheet({
           )}
           <div className="flex gap-2">
             {editing && (
-              <Button variant="ghost" onClick={handleCancel} className="text-clay">
-                Bekor qilish
+              <Button variant="ghost" onClick={handleDelete} className="text-clay">
+                O‘chirish
               </Button>
             )}
             <Button

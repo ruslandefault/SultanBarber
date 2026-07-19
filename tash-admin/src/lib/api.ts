@@ -791,8 +791,8 @@ const realApi = {
     )
   },
 
-  async cancelAppointment(id: string): Promise<void> {
-    await http.del<BAdminAppointmentOut>(`/admin/appointments/${id}`)
+  async deleteAppointment(id: string): Promise<void> {
+    await http.del(`/admin/appointments/${id}`)
   },
 }
 
