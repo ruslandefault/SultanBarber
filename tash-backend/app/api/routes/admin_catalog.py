@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import DbDep, OwnerDep
+from app.api.deps import DbDep, OwnerDep, UserDep
 from app.core.errors import NotFoundError
 from app.models.appointment import Appointment
 from app.models.master import Master, MasterService
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/admin", tags=["admin:catalog"])
 # ---- Categories -------------------------------------------------------------
 
 @router.get("/categories", response_model=list[CategoryOut])
-async def list_categories(db: DbDep, owner: OwnerDep):
+async def list_categories(db: DbDep, owner: UserDep):
     rows = (
         await db.execute(
             select(ServiceCategory)
@@ -67,7 +67,7 @@ async def update_category(category_id: int, data: CategoryUpdate, db: DbDep, own
 # ---- Services (soft-deactivate) --------------------------------------------
 
 @router.get("/services", response_model=list[ServiceOut])
-async def list_services(db: DbDep, owner: OwnerDep, include_inactive: bool = True):
+async def list_services(db: DbDep, owner: UserDep, include_inactive: bool = True):
     q = select(Service).where(Service.salon_id == owner.salon_id)
     if not include_inactive:
         q = q.where(Service.is_active.is_(True))
@@ -166,7 +166,7 @@ async def _master_detail(db, master_id: int) -> MasterDetailOut:
 
 
 @router.get("/masters", response_model=list[MasterOut])
-async def list_masters(db: DbDep, owner: OwnerDep):
+async def list_masters(db: DbDep, owner: UserDep):
     rows = (
         await db.execute(
             select(Master).where(Master.salon_id == owner.salon_id).order_by(Master.sort_order)
@@ -176,7 +176,7 @@ async def list_masters(db: DbDep, owner: OwnerDep):
 
 
 @router.get("/masters/{master_id}", response_model=MasterDetailOut)
-async def get_master(master_id: int, db: DbDep, owner: OwnerDep):
+async def get_master(master_id: int, db: DbDep, owner: UserDep):
     m = await db.get(Master, master_id)
     if m is None or m.salon_id != owner.salon_id:
         raise NotFoundError("Usta topilmadi", code="master_not_found")

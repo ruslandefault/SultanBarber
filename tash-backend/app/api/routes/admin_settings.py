@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from sqlalchemy import select
 
-from app.api.deps import DbDep, OwnerDep
+from app.api.deps import DbDep, OwnerDep, UserDep
 from app.core.errors import NotFoundError
 from app.models.salon import Salon, SalonSettings
 from app.schemas.admin import SettingsOut, SettingsUpdate
@@ -20,7 +20,7 @@ async def _salon(db, salon_id: int) -> Salon:
 
 
 @router.get("/salon", response_model=SalonOut)
-async def get_salon_profile(db: DbDep, owner: OwnerDep):
+async def get_salon_profile(db: DbDep, owner: UserDep):
     return SalonOut.model_validate(await _salon(db, owner.salon_id))
 
 
@@ -50,7 +50,7 @@ async def _settings(db, salon_id: int) -> SalonSettings:
 
 
 @router.get("/settings", response_model=SettingsOut)
-async def get_settings(db: DbDep, owner: OwnerDep):
+async def get_settings(db: DbDep, owner: UserDep):
     return SettingsOut.model_validate(await _settings(db, owner.salon_id))
 
 
