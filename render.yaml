@@ -1,0 +1,29 @@
+# Render Blueprint — TASH backend (FastAPI).
+# Deploy: Render Dashboard → New → Blueprint → shu rep'ni tanlang.
+# Render bu faylni o'qib, web service'ni avtomatik yaratadi.
+# Baza: Neon (DATABASE_URL'ni deploy paytida so'raydi — sync:false).
+services:
+  - type: web
+    name: tash-backend
+    runtime: python
+    plan: free
+    rootDir: tash-backend
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    # Migratsiya + (idempotent) seed + server. Seed mavjud salon bo'lsa o'tkazib yuboradi.
+    startCommand: alembic upgrade head && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL # Neon connection string (postgresql://...) — deploy paytida joylang
+        sync: false
+      - key: BOT_TOKEN # @BotFather token
+        sync: false
+      - key: MINIAPP_URL # Telegram Mini App URL (client frontend manzili)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_TZ
+        value: Asia/Tashkent
+      - key: PYTHON_VERSION
+        value: "3.12.7"

@@ -1,9 +1,27 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _normalize_db_url(raw: str) -> str:
+    """Make managed-provider URLs (Render/Neon/Heroku) work with asyncpg.
+
+    - postgres:// or postgresql:// -> postgresql+asyncpg://
+    - drop query params asyncpg rejects (sslmode, channel_binding); SSL for
+      remote hosts is enabled via connect_args in the engine instead.
+    """
+    if raw.startswith("postgres://"):
+        raw = "postgresql://" + raw[len("postgres://") :]
+    if raw.startswith("postgresql://"):
+        raw = "postgresql+asyncpg://" + raw[len("postgresql://") :]
+    parts = urlsplit(raw)
+    q = [(k, v) for k, v in parse_qsl(parts.query) if k not in ("sslmode", "channel_binding")]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(q), parts.fragment))
 
 
 class Settings(BaseSettings):
@@ -35,9 +53,18 @@ class Settings(BaseSettings):
     CLICK_SECRET_KEY: str = ""
     CLICK_MERCHANT_USER_ID: str = ""
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _fix_db_url(cls, v: str) -> str:
+        return _normalize_db_url(v)
+
     @property
     def tz(self) -> ZoneInfo:
         return ZoneInfo(self.APP_TZ)
+
+    @property
+    def db_is_remote(self) -> bool:
+        return "localhost" not in self.DATABASE_URL and "127.0.0.1" not in self.DATABASE_URL
 
 
 @lru_cache
