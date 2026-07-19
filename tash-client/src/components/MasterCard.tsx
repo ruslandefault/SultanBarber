@@ -1,5 +1,6 @@
 import type { Master } from '@/types'
 import { cn } from '@/lib/cn'
+import { mediaUrl } from '@/lib/api'
 import { Avatar } from '@/components/ui'
 
 export interface MasterCardProps {
@@ -26,7 +27,7 @@ export function MasterCard({ master, onClick, selected = false, variant = 'tile'
           className,
         )}
       >
-        <Avatar name={master.name} src={master.avatar} size="md" />
+        <Avatar name={master.name} src={mediaUrl(master.avatar)} size="md" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-medium text-bone">{master.name}</p>
           <p className="truncate text-sm text-stone">{master.specialty}</p>
@@ -49,7 +50,7 @@ export function MasterCard({ master, onClick, selected = false, variant = 'tile'
         className,
       )}
     >
-      <Avatar name={master.name} src={master.avatar} size="lg" />
+      <Avatar name={master.name} src={mediaUrl(master.avatar)} size="lg" />
       <div className="w-full">
         <p className="truncate text-sm font-medium text-bone">{master.name}</p>
         <p className="truncate text-xs text-stone">{master.specialty}</p>

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Service } from '@/types'
-import { api } from '@/lib/api'
+import { api, mediaUrl } from '@/lib/api'
 import { useAsync } from '@/lib/useAsync'
 import { formatDuration, formatSoum } from '@/lib/format'
 import { useBackButton, useHaptics, useMainButton } from '@/telegram/hooks'
@@ -14,6 +14,7 @@ export default function SalonHome() {
   const navigate = useNavigate()
   const haptics = useHaptics()
   const { data, loading, error } = useAsync(() => api.getSalon(), [])
+  const { data: products } = useAsync(() => api.getProducts(), [])
   const [category, setCategory] = useState(ALL)
 
   const startBooking = useCallback(
@@ -45,6 +46,7 @@ export default function SalonHome() {
           name={data.salon.name}
           tagline={data.salon.tagline}
           cover={data.salon.cover}
+          logo={data.salon.logo}
         />
       )}
 
@@ -61,25 +63,63 @@ export default function SalonHome() {
           </div>
         )}
 
+        {/* Products carousel — before services */}
+        {!loading && products && products.length > 0 && (
+          <Section
+            title="Mahsulotlar"
+            action={
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.selection()
+                  navigate('/products')
+                }}
+                className="inline-flex items-center gap-1 text-xs text-brass active:scale-[0.97]"
+              >
+                Barchasi
+                <svg viewBox="0 0 20 20" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <path d="M7 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            }
+          >
+            <div className="no-scrollbar -mx-5 flex gap-3 overflow-x-auto px-5">
+              {products.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    haptics.selection()
+                    navigate('/products')
+                  }}
+                  className="w-[40vw] max-w-[190px] shrink-0 overflow-hidden rounded-[14px] border border-hairline bg-slate text-left active:scale-[0.98]"
+                >
+                  <div className="aspect-square w-full bg-graphite/60">
+                    {p.imageUrl ? (
+                      <img
+                        src={mediaUrl(p.imageUrl)}
+                        alt={p.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-stone">
+                        <ProductBagIcon />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2.5">
+                    <p className="truncate text-sm font-medium text-bone">{p.title}</p>
+                    <p className="mt-1 font-mono text-sm text-brass">{formatSoum(p.priceSoum)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {/* Services */}
-        <Section
-          title="Xizmatlar"
-          action={
-            <button
-              type="button"
-              onClick={() => {
-                haptics.selection()
-                navigate('/products')
-              }}
-              className="inline-flex items-center gap-1 rounded-full border border-hairline bg-slate px-3 py-1 text-xs text-brass active:scale-[0.97]"
-            >
-              Mahsulotlar
-              <svg viewBox="0 0 20 20" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                <path d="M7 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          }
-        >
+        <Section title="Xizmatlar">
           {loading || !data ? (
             <div className="space-y-2">
               <Skeleton className="h-14 w-full" />
@@ -161,11 +201,21 @@ export default function SalonHome() {
 }
 
 // ── Hero ──────────────────────────────────────────────────────
-function Hero({ name, tagline, cover }: { name: string; tagline?: string; cover?: string | null }) {
+function Hero({
+  name,
+  tagline,
+  cover,
+  logo,
+}: {
+  name: string
+  tagline?: string
+  cover?: string | null
+  logo?: string | null
+}) {
   return (
     <div className="relative h-52 w-full overflow-hidden">
       {cover ? (
-        <img src={cover} alt={name} className="absolute inset-0 size-full object-cover" />
+        <img src={mediaUrl(cover)} alt={name} className="absolute inset-0 size-full object-cover" />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-slate to-graphite">
           <div className="absolute inset-0 opacity-40 [background:radial-gradient(circle_at_30%_20%,rgba(201,162,75,0.25),transparent_55%)]" />
@@ -173,7 +223,7 @@ function Hero({ name, tagline, cover }: { name: string; tagline?: string; cover?
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-graphite via-graphite/40 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-5">
-        <Avatar name={name} size="lg" className="ring-1 ring-hairline" />
+        <Avatar name={name} src={logo ? mediaUrl(logo) : null} size="lg" className="ring-1 ring-hairline" />
         <div className="pb-1">
           <h1 className="font-display text-2xl leading-tight text-bone">{name}</h1>
           {tagline && <p className="mt-0.5 text-sm text-stone">{tagline}</p>}
@@ -279,6 +329,14 @@ function ClockIcon() {
     <svg viewBox="0 0 20 20" className="size-3.5 stroke-stone" fill="none" strokeWidth="1.6" aria-hidden>
       <circle cx="10" cy="10" r="7.5" />
       <path d="M10 6v4l2.5 2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function ProductBagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-8" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <path d="M6 8h12l-.8 11.2A1.5 1.5 0 0 1 15.7 20.6H8.3a1.5 1.5 0 0 1-1.5-1.4L6 8Z" strokeLinejoin="round" />
+      <path d="M9 8V6.5a3 3 0 0 1 6 0V8" strokeLinecap="round" />
     </svg>
   )
 }

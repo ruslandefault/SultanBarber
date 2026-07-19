@@ -85,6 +85,7 @@ interface BeSalon {
   address: string | null
   phone: string | null
   photo_url: string | null
+  cover_url: string | null
   timezone: string
   is_active: boolean
 }
@@ -195,7 +196,7 @@ function toSalon(s: BeSalon): Salon {
     name: s.name,
     tagline: s.description ?? undefined, // backend `description` → client `tagline`
     logo: s.photo_url, // backend `photo_url` → client `logo`
-    cover: null, // backend has no cover image → default null
+    cover: s.cover_url, // backend `cover_url` → client hero background
     address: s.address ?? '', // client `address` is required
     phone: s.phone ?? undefined,
     // backend does not expose lat/lng, instagram, working hours, distance, or a

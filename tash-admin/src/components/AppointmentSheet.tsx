@@ -24,6 +24,7 @@ import {
   pad,
   toYmd,
 } from '@/lib/format'
+import { mediaUrl } from '@/lib/http'
 import { cn } from '@/lib/cn'
 
 export interface SheetPrefill {
@@ -460,7 +461,7 @@ export function AppointmentSheet({
                     : 'border-hairline-light text-stone hover:text-graphite',
                 )}
               >
-                <Avatar name={m.name} color={m.color} size="sm" className="h-6 w-6 text-[9px]" />
+                <Avatar name={m.name} color={m.color} src={mediaUrl(m.avatarUrl)} size="sm" className="h-6 w-6 text-[9px]" />
                 {m.name.split(' ')[0]}
               </button>
             ))}

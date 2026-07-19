@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PaymentMethod, Salon } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader } from '@/components/ui/Card'
-import { Field, Input } from '@/components/ui/Field'
+import { Field, Input, Label } from '@/components/ui/Field'
 import { Toggle, ToggleRow } from '@/components/ui/Toggle'
 import { Chip } from '@/components/ui/Chip'
 import { Segmented } from '@/components/ui/Segmented'
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { IconUpload, IconMap } from '@/components/icons'
 import { useToast } from '@/components/ui/Toast'
 import { api } from '@/lib/api'
+import { mediaUrl } from '@/lib/http'
 import { weekdayName, formatMoney } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
@@ -20,6 +21,7 @@ const REMINDER_OPTIONS = [
   { hours: 3, label: '3 soat oldin' },
   { hours: 2, label: '2 soat oldin' },
   { hours: 1, label: '1 soat oldin' },
+  { hours: 0.5, label: '30 daqiqa oldin' },
 ]
 
 const PAY_METHODS: { value: PaymentMethod; label: string }[] = [
@@ -32,6 +34,9 @@ export function Settings() {
   const { toast } = useToast()
   const [salon, setSalon] = useState<Salon | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState<'logo' | 'cover' | null>(null)
+  const logoRef = useRef<HTMLInputElement>(null)
+  const coverRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     void api.getSalon().then(setSalon)
@@ -39,6 +44,20 @@ export function Settings() {
 
   function patch(p: Partial<Salon>) {
     setSalon((prev) => (prev ? { ...prev, ...p } : prev))
+  }
+
+  async function uploadImage(kind: 'logo' | 'cover', file: File | undefined) {
+    if (!file) return
+    setUploading(kind)
+    try {
+      const url = await api.uploadImage(file)
+      patch(kind === 'logo' ? { logoUrl: url } : { coverUrl: url })
+      toast('Rasm yuklandi — saqlashni unutmang')
+    } catch {
+      toast('Rasm yuklab bo‘lmadi')
+    } finally {
+      setUploading(null)
+    }
   }
 
   async function saveAll() {
@@ -83,13 +102,64 @@ export function Settings() {
         <Card>
           <CardHeader title="Salon profili" subtitle="Mijozlar ko‘radigan ma’lumot" />
           <div className="flex flex-col gap-4 px-5 pb-5">
+            {/* Cover (bot orqa foni) */}
+            <div>
+              <Label>Cover rasm (bot orqa foni)</Label>
+              <input
+                ref={coverRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => uploadImage('cover', e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                onClick={() => coverRef.current?.click()}
+                className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-[12px] border border-dashed border-hairline-light bg-graphite/[0.03] hover:border-brass/50"
+              >
+                {salon.coverUrl ? (
+                  <img src={mediaUrl(salon.coverUrl)} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex flex-col items-center gap-1 text-stone">
+                    <IconUpload width={26} height={26} />
+                    <span className="text-xs">Cover rasm yuklash</span>
+                  </span>
+                )}
+                {uploading === 'cover' && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-graphite/40 text-xs text-bone">
+                    Yuklanmoqda…
+                  </span>
+                )}
+              </button>
+            </div>
+            {/* Logo */}
             <div className="flex items-center gap-4">
-              <span className="flex h-16 w-16 items-center justify-center rounded-[14px] bg-brass font-display text-lg font-semibold text-graphite">
-                SB
-              </span>
-              <Button variant="outline" onClick={() => toast('Rasm yuklash — tez orada')}>
+              <button
+                type="button"
+                onClick={() => logoRef.current?.click()}
+                className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-[14px] bg-brass font-display text-lg font-semibold text-graphite"
+              >
+                {salon.logoUrl ? (
+                  <img src={mediaUrl(salon.logoUrl)} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  'SB'
+                )}
+                {uploading === 'logo' && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-graphite/50 text-2xs text-bone">
+                    …
+                  </span>
+                )}
+              </button>
+              <input
+                ref={logoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => uploadImage('logo', e.target.files?.[0])}
+              />
+              <Button variant="outline" onClick={() => logoRef.current?.click()}>
                 <IconUpload width={18} height={18} />
-                Logo / cover yuklash
+                Logo yuklash
               </Button>
             </div>
             <Field label="Nom">

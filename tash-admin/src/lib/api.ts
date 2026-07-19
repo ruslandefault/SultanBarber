@@ -108,6 +108,7 @@ interface BSalonOut {
   phone: string | null
   instagram: string | null
   photo_url: string | null
+  cover_url: string | null
   timezone: string
   is_active: boolean
   working_hours: { weekday: number; open: boolean; from: string; to: string }[] | null
@@ -370,7 +371,7 @@ const realApi = {
       phone: s.phone ?? '',
       instagram: s.instagram ?? '',
       logoUrl: s.photo_url,
-      coverUrl: null, // gap: no backend field (file upload)
+      coverUrl: s.cover_url,
       workingHours:
         s.working_hours && s.working_hours.length > 0
           ? s.working_hours.map((w) => ({
@@ -382,7 +383,8 @@ const realApi = {
           : defaultWorkingHours(),
       notifications: {
         telegramReminder: settings.reminder_telegram,
-        reminderTimings: settings.reminder_offsets.map((m) => Math.round(m / 60)),
+        // minutes → hours (keep fractions so 30 min = 0.5 survives the round-trip)
+        reminderTimings: settings.reminder_offsets.map((m) => m / 60),
         confirmationMessage: settings.confirmation_msg,
       },
       prepayment: {
@@ -421,6 +423,8 @@ const realApi = {
     if (patch.address !== undefined) salonBody.address = patch.address
     if (patch.phone !== undefined) salonBody.phone = patch.phone
     if (patch.instagram !== undefined) salonBody.instagram = patch.instagram
+    if (patch.logoUrl !== undefined) salonBody.photo_url = patch.logoUrl
+    if (patch.coverUrl !== undefined) salonBody.cover_url = patch.coverUrl
     if (patch.workingHours !== undefined) {
       salonBody.working_hours = patch.workingHours.map((w) => ({
         weekday: w.weekday,

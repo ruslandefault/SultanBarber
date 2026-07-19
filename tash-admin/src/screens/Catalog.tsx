@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Category, Master, MasterSchedule, Service } from '@/types'
 import { PageHeader } from '@/components/PageHeader'
@@ -10,9 +10,10 @@ import { Toggle } from '@/components/ui/Toggle'
 import { Sheet } from '@/components/ui/Sheet'
 import { Field, Input, Label } from '@/components/ui/Field'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { IconPlus, IconCheck } from '@/components/icons'
+import { IconPlus, IconCheck, IconUpload } from '@/components/icons'
 import { useToast } from '@/components/ui/Toast'
 import { api } from '@/lib/api'
+import { mediaUrl } from '@/lib/http'
 import { formatMoney, formatDuration, weekdayName } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
@@ -379,7 +380,7 @@ function MastersTab() {
             return (
               <Card key={m.id} className={cn('p-4', !m.isActive && 'opacity-60')}>
                 <div className="flex items-center gap-3">
-                  <Avatar name={m.name} color={m.color} size="lg" />
+                  <Avatar name={m.name} color={m.color} src={mediaUrl(m.avatarUrl)} size="lg" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-medium text-graphite">
                       {m.name}
@@ -455,6 +456,9 @@ function MasterSheet({
   const { toast } = useToast()
   const [name, setName] = useState('')
   const [specialty, setSpecialty] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoRef = useRef<HTMLInputElement>(null)
   const [schedule, setSchedule] = useState<MasterSchedule[]>(DEFAULT_SCHEDULE)
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -466,15 +470,29 @@ function MasterSheet({
     if (master) {
       setName(master.name)
       setSpecialty(master.specialty)
+      setAvatarUrl(master.avatarUrl)
       setSchedule(master.schedule.map((d) => ({ ...d })))
       setServiceIds([...master.serviceIds])
     } else {
       setName('')
       setSpecialty('')
+      setAvatarUrl(null)
       setSchedule(DEFAULT_SCHEDULE.map((d) => ({ ...d })))
       setServiceIds([])
     }
   }, [open, master])
+
+  async function uploadPhoto(file: File | undefined) {
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      setAvatarUrl(await api.uploadImage(file))
+    } catch {
+      setError('Rasm yuklab bo‘lmadi.')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
 
   function setDay(weekday: number, patch: Partial<MasterSchedule>) {
     setSchedule((prev) =>
@@ -490,7 +508,7 @@ function MasterSheet({
         id: master?.id,
         name: name.trim(),
         specialty: specialty.trim() || 'Barber',
-        avatarUrl: master?.avatarUrl ?? null,
+        avatarUrl,
         color: master?.color ?? '#C9A24B',
         schedule,
         serviceIds,
@@ -558,6 +576,50 @@ function MasterSheet({
       }
     >
       <div className="flex flex-col gap-4">
+        {/* Photo (circular, like a Telegram account) */}
+        <div className="flex items-center gap-4">
+          <input
+            ref={photoRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => uploadPhoto(e.target.files?.[0])}
+          />
+          <button
+            type="button"
+            onClick={() => photoRef.current?.click()}
+            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-graphite/[0.06]"
+          >
+            {avatarUrl ? (
+              <img src={mediaUrl(avatarUrl)} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-stone">
+                <IconUpload width={22} height={22} />
+              </span>
+            )}
+            {uploadingPhoto && (
+              <span className="absolute inset-0 flex items-center justify-center bg-graphite/50 text-2xs text-bone">
+                …
+              </span>
+            )}
+          </button>
+          <div className="flex flex-col gap-1">
+            <Button variant="outline" onClick={() => photoRef.current?.click()}>
+              <IconUpload width={16} height={16} />
+              Rasm yuklash
+            </Button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setAvatarUrl(null)}
+                className="text-2xs text-clay hover:underline"
+              >
+                Rasmni olib tashlash
+              </button>
+            )}
+          </div>
+        </div>
+
         <Field label="Ism familiya" error={error ?? undefined}>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>

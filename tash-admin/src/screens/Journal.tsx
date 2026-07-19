@@ -34,6 +34,7 @@ import {
   toYmd,
   weekdayShort,
 } from '@/lib/format'
+import { mediaUrl } from '@/lib/http'
 import { cn } from '@/lib/cn'
 
 type ViewMode = 'day' | 'week'
@@ -197,7 +198,7 @@ export function Journal() {
                       : 'border-hairline-light text-stone',
                   )}
                 >
-                  <Avatar name={m.name} color={m.color} size="sm" className="h-6 w-6 text-[9px]" />
+                  <Avatar name={m.name} color={m.color} src={mediaUrl(m.avatarUrl)} size="sm" className="h-6 w-6 text-[9px]" />
                   {m.name.split(' ')[0]}
                 </button>
               ))}
@@ -330,7 +331,7 @@ function DayGrid({
             >
               {/* column header */}
               <div className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-hairline-light bg-bone px-3">
-                <Avatar name={master.name} color={master.color} size="sm" className="h-7 w-7 text-[10px]" />
+                <Avatar name={master.name} color={master.color} src={mediaUrl(master.avatarUrl)} size="sm" className="h-7 w-7 text-[10px]" />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-graphite">
                     {master.name}
