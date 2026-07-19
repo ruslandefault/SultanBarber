@@ -137,13 +137,21 @@ class NotificationService:
     async def _mark_sent(
         self, db: AsyncSession, appointment_id: int, offset_min: int, kind: str
     ) -> bool:
-        """Insert a ledger row; returns False if already sent (unique clash)."""
-        db.add(SentReminder(appointment_id=appointment_id, offset_min=offset_min, kind=kind))
+        """Insert a ledger row; returns False if already sent (unique clash).
+
+        Uses a SAVEPOINT so a duplicate only rolls back the savepoint — a full
+        session rollback would EXPIRE every loaded object (e.g. the appointment),
+        and the next attribute access would trigger an async lazy-load outside the
+        greenlet (MissingGreenlet).
+        """
         try:
-            await db.flush()
+            async with db.begin_nested():
+                db.add(
+                    SentReminder(appointment_id=appointment_id, offset_min=offset_min, kind=kind)
+                )
+                await db.flush()
             return True
         except IntegrityError:
-            await db.rollback()
             return False
 
     async def _service_names(self, appt: Appointment) -> list[str]:
