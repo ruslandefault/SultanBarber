@@ -1,0 +1,27 @@
+name: keepalive
+
+# Bepul hosting (masalan Render free) harakatsizlikda "uxlaydi". Bu workflow
+# backend /health endpointini har ~10 daqiqada chaqirib, uni uyg'oq saqlaydi.
+#
+# Sozlash: GitHub repo → Settings → Secrets and variables → Actions → Variables →
+#   New repository variable: BACKEND_URL = https://<sizning-backend>.onrender.com
+# (Variable qo'yilmaguncha workflow xatosiz o'tkazib yuboradi.)
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # har 10 daqiqada (GitHub cron kechikishi mumkin)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health
+        run: |
+          URL="${{ vars.BACKEND_URL }}"
+          if [ -z "$URL" ]; then
+            echo "BACKEND_URL variable set qilinmagan — o'tkazib yuborildi."
+            exit 0
+          fi
+          echo "Pinging $URL/health"
+          curl -fsS --max-time 30 "$URL/health" && echo " — OK"

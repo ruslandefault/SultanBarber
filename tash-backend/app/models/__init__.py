@@ -4,6 +4,7 @@ from app.db.base import Base
 from app.models.appointment import Appointment, AppointmentService
 from app.models.client import Client, ClientTag, ClientTagLink
 from app.models.master import Master, MasterService
+from app.models.media import Media
 from app.models.notification import SentReminder
 from app.models.payment import Payment
 from app.models.product import Product
@@ -28,5 +29,6 @@ __all__ = [
     "AppointmentService",
     "Payment",
     "Product",
+    "Media",
     "SentReminder",
 ]

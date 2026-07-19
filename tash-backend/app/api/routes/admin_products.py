@@ -8,27 +8,41 @@ from sqlalchemy import select
 
 from app.api.deps import DbDep, OwnerDep
 from app.core.errors import NotFoundError, ValidationAppError
+from app.models.media import Media
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductOut, ProductUpdate, UploadOut
 
 router = APIRouter(prefix="/admin", tags=["admin:products"])
 
-UPLOAD_DIR = Path("uploads")
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+CONTENT_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+}
 MAX_BYTES = 8 * 1024 * 1024  # 8 MB
 
 
 @router.post("/upload", response_model=UploadOut)
-async def upload_image(owner: OwnerDep, file: UploadFile = File(...)) -> UploadOut:
+async def upload_image(owner: OwnerDep, db: DbDep, file: UploadFile = File(...)) -> UploadOut:
     ext = Path(file.filename or "").suffix.lower()
     if ext not in ALLOWED_EXT:
         raise ValidationAppError("Faqat rasm fayllari (jpg, png, webp)", code="bad_file_type")
     content = await file.read()
     if len(content) > MAX_BYTES:
         raise ValidationAppError("Rasm hajmi 8 MB dan oshmasin", code="file_too_large")
-    UPLOAD_DIR.mkdir(exist_ok=True)
+    # Store in the DB (survives restarts / ephemeral filesystems).
     name = f"{uuid.uuid4().hex}{ext}"
-    (UPLOAD_DIR / name).write_bytes(content)
+    db.add(
+        Media(
+            name=name,
+            content_type=CONTENT_TYPES.get(ext, "application/octet-stream"),
+            data=content,
+        )
+    )
+    await db.commit()
     return UploadOut(url=f"/uploads/{name}")
 
 

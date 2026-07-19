@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import DbDep, _default_salon_id
 from app.core.errors import NotFoundError
 from app.models.master import Master, MasterService
+from app.models.media import Media
 from app.models.product import Product
 from app.models.salon import Salon
 from app.models.service import Service, ServiceCategory
@@ -88,6 +89,19 @@ async def get_salon(db: DbDep) -> SalonProfileOut:
         salon=SalonOut.model_validate(salon),
         categories=cat_out,
         masters=master_out,
+    )
+
+
+@router.get("/uploads/{name}")
+async def get_media(name: str, db: DbDep) -> Response:
+    """Serve an uploaded image from the DB (public)."""
+    m = await db.get(Media, name)
+    if m is None:
+        raise NotFoundError("Rasm topilmadi", code="media_not_found")
+    return Response(
+        content=m.data,
+        media_type=m.content_type,
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
     )
 
 
