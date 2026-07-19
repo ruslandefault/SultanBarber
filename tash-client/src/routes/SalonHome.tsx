@@ -168,6 +168,36 @@ export default function SalonHome() {
           )}
         </Section>
 
+        {/* Contact: phone + instagram */}
+        {!loading && data && (data.salon.phone || data.salon.instagram) && (
+          <Section title="Aloqa">
+            <div className="overflow-hidden rounded-[14px] border border-hairline bg-slate">
+              {data.salon.phone && (
+                <a
+                  href={`tel:${data.salon.phone.replace(/[^\d+]/g, '')}`}
+                  className="flex items-center gap-3 border-b border-hairline px-4 py-3 last:border-b-0 active:bg-graphite/40"
+                >
+                  <PhoneIcon />
+                  <span className="min-w-0 flex-1 truncate font-mono text-sm text-bone">{data.salon.phone}</span>
+                  <span className="shrink-0 text-xs text-brass">Qo‘ng‘iroq</span>
+                </a>
+              )}
+              {data.salon.instagram && (
+                <a
+                  href={igUrl(data.salon.instagram)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 px-4 py-3 active:bg-graphite/40"
+                >
+                  <InstagramIcon />
+                  <span className="min-w-0 flex-1 truncate text-sm text-bone">{igHandle(data.salon.instagram)}</span>
+                  <span className="shrink-0 text-xs text-brass">Ochish</span>
+                </a>
+              )}
+            </div>
+          </Section>
+        )}
+
         {/* Address / map */}
         {!loading && data && (
           <Section title="Manzil">
@@ -329,6 +359,35 @@ function ClockIcon() {
     <svg viewBox="0 0 20 20" className="size-3.5 stroke-stone" fill="none" strokeWidth="1.6" aria-hidden>
       <circle cx="10" cy="10" r="7.5" />
       <path d="M10 6v4l2.5 2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function igHandle(v: string): string {
+  const h = v
+    .trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+    .replace(/\/+$/, '')
+    .replace(/^@/, '')
+  return h ? '@' + h : v
+}
+function igUrl(v: string): string {
+  const t = v.trim()
+  if (/^https?:\/\//i.test(t)) return t
+  return 'https://instagram.com/' + t.replace(/^@/, '')
+}
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-brass" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M6.6 3h3l1.5 4.5-2 1.4a12 12 0 0 0 5.9 5.9l1.4-2 4.5 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.2 2 2 0 0 1 6.6 3Z" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-brass" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </svg>
   )
 }

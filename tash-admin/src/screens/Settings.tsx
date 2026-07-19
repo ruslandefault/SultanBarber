@@ -35,12 +35,30 @@ export function Settings() {
   const [salon, setSalon] = useState<Salon | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState<'logo' | 'cover' | null>(null)
+  const [locText, setLocText] = useState('')
   const logoRef = useRef<HTMLInputElement>(null)
   const coverRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     void api.getSalon().then(setSalon)
   }, [])
+
+  // Initialize the location text from saved coordinates (once salon loads).
+  useEffect(() => {
+    if (salon?.latitude != null && salon?.longitude != null && !locText) {
+      setLocText(`${salon.latitude}, ${salon.longitude}`)
+    }
+  }, [salon]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function onLocationChange(value: string) {
+    setLocText(value)
+    const nums = value.match(/-?\d+\.\d+/g)
+    if (nums && nums.length >= 2) {
+      patch({ latitude: Number(nums[0]), longitude: Number(nums[1]) })
+    } else if (!value.trim()) {
+      patch({ latitude: null, longitude: null })
+    }
+  }
 
   function patch(p: Partial<Salon>) {
     setSalon((prev) => (prev ? { ...prev, ...p } : prev))
@@ -166,14 +184,33 @@ export function Settings() {
               <Input value={salon.name} onChange={(e) => patch({ name: e.target.value })} />
             </Field>
             <Field label="Manzil">
+              <Input
+                value={salon.address}
+                onChange={(e) => patch({ address: e.target.value })}
+                placeholder="Toshkent sh., ... ko‘chasi 1"
+              />
+            </Field>
+            <Field
+              label="Lokatsiya (xaritada)"
+              hint="Google Maps'да joyni bosing → koordinatani ko‘chiring (masalan: 41.311, 69.279)"
+            >
               <div className="flex gap-2">
                 <Input
-                  value={salon.address}
-                  onChange={(e) => patch({ address: e.target.value })}
+                  value={locText}
+                  onChange={(e) => onLocationChange(e.target.value)}
+                  placeholder="41.311, 69.279 yoki Google Maps havolasi"
                 />
-                <Button variant="outline" onClick={() => toast('Xarita — tez orada')} aria-label="Xaritada belgilash">
-                  <IconMap />
-                </Button>
+                {salon.latitude != null && salon.longitude != null && (
+                  <a
+                    href={`https://www.google.com/maps?q=${salon.latitude},${salon.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center rounded-[10px] border border-hairline-light px-3 text-stone hover:text-graphite"
+                    aria-label="Xaritada ochish"
+                  >
+                    <IconMap />
+                  </a>
+                )}
               </div>
             </Field>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -182,12 +219,14 @@ export function Settings() {
                   value={salon.phone}
                   onChange={(e) => patch({ phone: e.target.value })}
                   className="tabular"
+                  placeholder="+998 90 123 45 67"
                 />
               </Field>
               <Field label="Instagram">
                 <Input
                   value={salon.instagram}
                   onChange={(e) => patch({ instagram: e.target.value })}
+                  placeholder="@salon yoki havola"
                 />
               </Field>
             </div>

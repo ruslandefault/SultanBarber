@@ -84,8 +84,11 @@ interface BeSalon {
   description: string | null
   address: string | null
   phone: string | null
+  instagram: string | null
   photo_url: string | null
   cover_url: string | null
+  latitude: number | null
+  longitude: number | null
   timezone: string
   is_active: boolean
 }
@@ -200,8 +203,10 @@ function toSalon(s: BeSalon): Salon {
     cover: s.cover_url, // backend `cover_url` → client hero background
     address: s.address ?? '', // client `address` is required
     phone: s.phone ?? undefined,
-    // backend does not expose lat/lng, instagram, working hours, distance, or a
-    // live open/closed flag; `is_active` (salon enabled) is the best proxy.
+    instagram: s.instagram ?? undefined,
+    lat: s.latitude ?? undefined,
+    lng: s.longitude ?? undefined,
+    // `is_active` (salon enabled) is the best proxy for open/closed.
     isOpen: s.is_active,
   }
 }

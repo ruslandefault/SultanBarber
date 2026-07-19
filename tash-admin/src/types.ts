@@ -18,6 +18,8 @@ export interface Salon {
   address: string
   phone: string
   instagram: string
+  latitude: number | null
+  longitude: number | null
   logoUrl: string | null
   coverUrl: string | null
   // working hours per weekday (0 = Monday ... 6 = Sunday)

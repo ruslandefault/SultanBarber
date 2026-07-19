@@ -109,6 +109,8 @@ interface BSalonOut {
   instagram: string | null
   photo_url: string | null
   cover_url: string | null
+  latitude: number | null
+  longitude: number | null
   timezone: string
   is_active: boolean
   working_hours: { weekday: number; open: boolean; from: string; to: string }[] | null
@@ -370,6 +372,8 @@ const realApi = {
       address: s.address ?? '',
       phone: s.phone ?? '',
       instagram: s.instagram ?? '',
+      latitude: s.latitude,
+      longitude: s.longitude,
       logoUrl: s.photo_url,
       coverUrl: s.cover_url,
       workingHours:
@@ -423,6 +427,8 @@ const realApi = {
     if (patch.address !== undefined) salonBody.address = patch.address
     if (patch.phone !== undefined) salonBody.phone = patch.phone
     if (patch.instagram !== undefined) salonBody.instagram = patch.instagram
+    if (patch.latitude !== undefined) salonBody.latitude = patch.latitude
+    if (patch.longitude !== undefined) salonBody.longitude = patch.longitude
     if (patch.logoUrl !== undefined) salonBody.photo_url = patch.logoUrl
     if (patch.coverUrl !== undefined) salonBody.cover_url = patch.coverUrl
     if (patch.workingHours !== undefined) {

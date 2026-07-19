@@ -7,6 +7,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     CheckConstraint,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -32,6 +33,8 @@ class Salon(Base, TimestampMixin):
     address: Mapped[str | None] = mapped_column(String(500))
     phone: Mapped[str | None] = mapped_column(String(32))
     instagram: Mapped[str | None] = mapped_column(String(200))
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
     photo_url: Mapped[str | None] = mapped_column(String(500))  # logo
     cover_url: Mapped[str | None] = mapped_column(String(500))  # hero/background image
     timezone: Mapped[str] = mapped_column(String(64), default="Asia/Tashkent", nullable=False)

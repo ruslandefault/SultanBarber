@@ -48,6 +48,8 @@ const salon: Salon = {
   address: 'Toshkent, Chilonzor tumani, Bunyodkor ko‘chasi 12',
   phone: '+998 90 123 45 67',
   instagram: '@sultan.barber',
+  latitude: 41.311081,
+  longitude: 69.279737,
   logoUrl: null,
   coverUrl: null,
   workingHours: Array.from({ length: 7 }, (_, weekday) => ({

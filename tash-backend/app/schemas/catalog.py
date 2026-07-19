@@ -124,6 +124,8 @@ class SalonOut(ORMModel):
     instagram: str | None = None
     photo_url: str | None
     cover_url: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     timezone: str
     is_active: bool
     working_hours: list[SalonHour] | None = None
@@ -143,4 +145,6 @@ class SalonProfileUpdate(BaseModel):
     instagram: str | None = None
     photo_url: str | None = None
     cover_url: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     working_hours: list[SalonHour] | None = None
