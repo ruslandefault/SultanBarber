@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { Shell } from '@/components/Shell'
 import { Journal } from '@/screens/Journal'
 import { Clients } from '@/screens/Clients'
@@ -12,7 +12,9 @@ import { Field, Input } from '@/components/ui/Field'
 import { isAuthed, login } from '@/lib/auth'
 import { ApiError } from '@/lib/http'
 
-const router = createBrowserRouter([
+// HashRouter: refreshing any route works on static hosting without server
+// rewrite rules (URLs become /#/mahsulotlar etc.).
+const router = createHashRouter([
   {
     path: '/',
     element: <Shell />,
