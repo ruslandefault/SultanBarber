@@ -21,6 +21,7 @@ import {
   IconChevronRight,
   IconPlus,
   IconCalendar,
+  IconRefresh,
 } from '@/components/icons'
 import { api } from '@/lib/api'
 import {
@@ -127,6 +128,16 @@ export function Journal() {
       subtitle={view === 'day' ? formatDateLong(cursor) : 'Haftalik ko‘rinish'}
       actions={
         <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void refreshAll()}
+            disabled={loading}
+            aria-label="Yangilash"
+            title="Yangilash"
+          >
+            <IconRefresh width={18} height={18} className={loading ? 'animate-spin' : ''} />
+          </Button>
           <Segmented
             options={[
               { value: 'day', label: 'Kun' },

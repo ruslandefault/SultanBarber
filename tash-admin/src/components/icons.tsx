@@ -125,6 +125,20 @@ export const IconUpload = (p: P) => (
   </svg>
 )
 
+export const IconRefresh = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20 11a8 8 0 0 0-14.3-4.5M4 4v3.5H7.5" />
+    <path d="M4 13a8 8 0 0 0 14.3 4.5M20 20v-3.5H16.5" />
+  </svg>
+)
+
+export const IconLogout = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15" />
+    <path d="M10 8l-4 4 4 4M6 12h11" />
+  </svg>
+)
+
 export const IconBag = (p: P) => (
   <svg {...base(p)}>
     <path d="M6 8h12l-.8 11.2A1.5 1.5 0 0 1 15.7 20.6H8.3a1.5 1.5 0 0 1-1.5-1.4L6 8Z" />

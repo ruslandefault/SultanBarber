@@ -7,8 +7,15 @@ import {
   IconMaster,
   IconBag,
   IconSettings,
+  IconLogout,
 } from '@/components/icons'
+import { logout } from '@/lib/auth'
 import { cn } from '@/lib/cn'
+
+function handleLogout() {
+  logout()
+  window.location.reload()
+}
 
 interface NavItem {
   to: string
@@ -71,8 +78,15 @@ export function Shell() {
           ))}
         </nav>
 
-        <div className="border-t border-hairline-dark px-5 py-4">
-          <p className="text-2xs text-stone">TASH · demo ma’lumotlar</p>
+        <div className="border-t border-hairline-dark px-3 py-3">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-xs font-medium text-stone transition-colors hover:bg-slate/60 hover:text-clay"
+          >
+            <IconLogout width={20} height={20} />
+            Chiqish
+          </button>
         </div>
       </aside>
 
@@ -99,6 +113,14 @@ export function Shell() {
             {item.label}
           </NavLink>
         ))}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-stone"
+        >
+          <IconLogout width={22} height={22} />
+          Chiqish
+        </button>
       </nav>
     </div>
   )
