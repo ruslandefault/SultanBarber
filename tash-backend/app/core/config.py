@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Auth tuning
     TELEGRAM_AUTH_MAX_AGE_HOURS: int = 24
-    JWT_EXPIRE_MINUTES: int = 720
+    JWT_EXPIRE_MINUTES: int = 10080  # 7 kun (admin har kuni qayta kirmasin)
     JWT_ALGORITHM: str = "HS256"
 
     # Payme

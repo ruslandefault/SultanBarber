@@ -27,6 +27,17 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+let redirecting = false
+/** Token eskirganda: saqlangan sessiyani tozalab, login gate'ga qaytaramiz. */
+function handleUnauthorized(): void {
+  if (redirecting) return // bir vaqtda bir nechta 401 kelsa, faqat bir marta
+  redirecting = true
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem('tash_role')
+  localStorage.removeItem('tash_salon_id')
+  window.location.reload()
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -42,6 +53,11 @@ async function request<T>(
   })
 
   if (!res.ok) {
+    // Token eskirgan/yaroqsiz (401) → sessiyani tozalab, login oynasiga
+    // qaytaramiz. Aks holda sahifa cheksiz "loading"da qolib ketardi.
+    if (res.status === 401 && !path.startsWith('/auth/login')) {
+      handleUnauthorized()
+    }
     let message = 'Xatolik yuz berdi'
     let code = 'error'
     try {
@@ -68,6 +84,7 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
     body: form,
   })
   if (!res.ok) {
+    if (res.status === 401) handleUnauthorized()
     let message = 'Yuklashda xatolik'
     let code = 'error'
     try {

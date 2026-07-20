@@ -84,9 +84,15 @@ export function Journal() {
     const rangeStart =
       view === 'day' ? cursor : startOfDay(addDays(cursor, -isoWeekday(cursor)))
     const rangeEnd = view === 'day' ? addDays(cursor, 1) : addDays(rangeStart, 7)
-    const data = await api.getAppointments(rangeStart, rangeEnd)
-    setAppts(data)
-    setLoading(false)
+    try {
+      const data = await api.getAppointments(rangeStart, rangeEnd)
+      setAppts(data)
+    } catch {
+      // 401 bo'lsa http.ts login oynasiga qaytaradi; boshqa xatoda ham
+      // spinnerда qotib qolmaslik uchun loading'ni tozalaymiz.
+    } finally {
+      setLoading(false)
+    }
   }, [cursor, view])
 
   useEffect(() => {
