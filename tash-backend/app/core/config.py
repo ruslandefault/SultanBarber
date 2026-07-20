@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "dev-secret-change-me"
     APP_TZ: str = "Asia/Tashkent"
     MINIAPP_URL: str = "https://t.me/your_bot/app"
+    # Telegram guruh chat_id — yangi bandlovlar shu guruhga yuboriladi.
+    # Bo'sh bo'lsa guruh xabari yuborilmaydi. Guruh id manfiy son (masalan
+    # -1001234567890). get_chat_id.py yordamida topiladi.
+    TELEGRAM_NOTIFY_CHAT_ID: str = ""
 
     # Auth tuning
     TELEGRAM_AUTH_MAX_AGE_HOURS: int = 24

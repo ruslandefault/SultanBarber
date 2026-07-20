@@ -115,6 +115,9 @@ async def admin_create(data: AdminAppointmentCreate, db: DbDep, user: UserDep):
         created_via=CreatedVia.admin,
         settings_row=settings_row,
     )
+    from app.services.notifications import NotificationService
+
+    await NotificationService().send_new_booking(db, appt, source="admin")
     return AdminAppointmentOut.model_validate(appt)
 
 

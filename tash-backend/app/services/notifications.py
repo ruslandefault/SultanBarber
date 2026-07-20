@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
+from html import escape as _esc
 
 import httpx
 from sqlalchemy import select
@@ -23,6 +24,7 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.models.appointment import Appointment
 from app.models.client import Client
+from app.models.master import Master
 from app.models.notification import SentReminder
 
 logger = logging.getLogger("tash.notifications")
@@ -168,6 +170,52 @@ class NotificationService:
         text = self.confirmation_text(appt, await self._service_names(appt))
         await self.channel.send(recipient=chat_id, text=text, reply_markup=_miniapp_button())
         await db.commit()  # persist the ledger row regardless of send outcome
+
+    async def send_new_booking(
+        self, db: AsyncSession, appt: Appointment, *, source: str = "bot"
+    ) -> None:
+        """Post a rich new-booking notification to the salon's Telegram group.
+
+        No-op if TELEGRAM_NOTIFY_CHAT_ID is not configured. Never raises — a
+        notification failure must not fail the booking itself.
+        """
+        chat_id = settings.TELEGRAM_NOTIFY_CHAT_ID
+        if not chat_id:
+            return
+        try:
+            client = await db.get(Client, appt.client_id)
+            master = await db.get(Master, appt.master_id)
+            services = ", ".join(_esc(s.name) for s in appt.services) or "—"
+            total_min = sum(s.duration_min for s in appt.services)
+
+            who = _esc(client.full_name) if client else "—"
+            contact: list[str] = []
+            if client and client.phone:
+                contact.append(_esc(client.phone))
+            if client and client.username:
+                contact.append(f"@{_esc(client.username)}")
+            src = {
+                "bot": "🤖 Bot orqali",
+                "admin": "🧑‍💼 Admin panel orqali",
+            }.get(source, source)
+            price = f"{appt.price_total:,}".replace(",", " ")
+
+            lines = ["🔔 <b>Yangi bandlov</b>", "", f"👤 Mijoz: <b>{who}</b>"]
+            if contact:
+                lines.append(f"📞 {' · '.join(contact)}")
+            lines += [
+                f"✂️ Usta: <b>{_esc(master.name) if master else '—'}</b>",
+                f"💈 Xizmat: {services}",
+                f"🗓 Vaqt: <b>{_fmt_local(appt.start_at)}</b>",
+                f"⏱ Davomiyligi: {total_min} daqiqa",
+                f"💰 Summa: {price} so'm",
+            ]
+            if appt.notes:
+                lines.append(f"📝 Izoh: {_esc(appt.notes)}")
+            lines.append(f"\n{src}")
+            await self.channel.send(recipient=chat_id, text="\n".join(lines))
+        except Exception as exc:  # noqa: BLE001 — notifications are best-effort
+            logger.warning("New-booking group notify failed: %s", exc)
 
     async def send_cancelled(self, db: AsyncSession, appt: Appointment) -> None:
         chat_id = await self._client_chat_id(db, appt.client_id)

@@ -82,9 +82,12 @@ async def create_appointment(
     )
 
     requires_deposit = payment is not None
+    notifier = NotificationService()
     # No deposit required -> booking is effectively confirmed; send confirmation.
     if not requires_deposit and settings_row.confirmation_msg:
-        await NotificationService().send_confirmation(db, appt)
+        await notifier.send_confirmation(db, appt)
+    # Notify the salon's Telegram group about the new booking.
+    await notifier.send_new_booking(db, appt, source="bot")
 
     return AppointmentCreateOut(
         appointment=AppointmentOut.model_validate(appt),
