@@ -31,7 +31,12 @@ export default function Products() {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {data.map((p) => (
-            <div key={p.id} className="overflow-hidden rounded-[14px] border border-hairline bg-slate">
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => navigate(`/products/${p.id}`)}
+              className="overflow-hidden rounded-[14px] border border-hairline bg-slate text-left active:scale-[0.98]"
+            >
               <div className="aspect-square w-full bg-graphite/60">
                 {p.imageUrl ? (
                   <img
@@ -53,7 +58,7 @@ export default function Products() {
                 )}
                 <p className="mt-1.5 font-mono text-sm text-brass">{formatSoum(p.priceSoum)}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

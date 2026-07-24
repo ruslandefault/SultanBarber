@@ -8,6 +8,7 @@ const SalonHome = lazy(() => import('@/routes/SalonHome'))
 const Booking = lazy(() => import('@/routes/Booking'))
 const MyBookings = lazy(() => import('@/routes/MyBookings'))
 const Products = lazy(() => import('@/routes/Products'))
+const ProductDetail = lazy(() => import('@/routes/ProductDetail'))
 const Style = lazy(() => import('@/routes/Style'))
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/appointments" element={<MyBookings />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/style" element={<Style />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

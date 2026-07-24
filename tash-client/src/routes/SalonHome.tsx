@@ -90,7 +90,7 @@ export default function SalonHome() {
                   type="button"
                   onClick={() => {
                     haptics.selection()
-                    navigate('/products')
+                    navigate(`/products/${p.id}`)
                   }}
                   className="w-[40vw] max-w-[190px] shrink-0 overflow-hidden rounded-[14px] border border-hairline bg-slate text-left active:scale-[0.98]"
                 >
